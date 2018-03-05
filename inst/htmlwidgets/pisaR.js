@@ -6,20 +6,34 @@ HTMLWidgets.widget({
 
   factory: function(el, width, height) {
 
-    // TODO: define shared variables for this instance
-
     return {
 
       renderValue: function(x) {
-
-        // TODO: code to render the widget, e.g.
-        el.innerText = x.message;
+		// in case I need these later
+		// var options = x.options;
+		// var data = x.dataset;
+		// var chartType = x.options.chartType;
+		
+        // general chart with layers
+		if(x.layers) {
+			if(this.chart){
+				this.chart.update(x);
+			} else {
+				this.chart = new pisaChart({
+					element: document.getElementById(el.id),
+					plotLayers: x.layers,
+					options: x.options
+					});
+			}
+		}
 
       },
 
       resize: function(width, height) {
-
-        // TODO: code to re-render the widget with a new size
+		//chart will use its own resize method
+        if(this.chart) {
+			this.chart.resize();
+		}
 
       }
 
