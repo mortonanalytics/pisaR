@@ -13,7 +13,7 @@ HTMLWidgets.widget({
 		// var options = x.options;
 		// var data = x.dataset;
 		// var chartType = x.options.chartType;
-		
+
         // general chart with layers
 		if(x.layers) {
 			if(this.chart){
