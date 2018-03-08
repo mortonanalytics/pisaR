@@ -52,21 +52,8 @@ pisaChart.prototype.initialize = function(chartElement){
 	this.setClipPath(chartElement);
 	this.processScales(this.plotLayers);
 	this.addAxes();
-	//route layer to appropriate drawing functions
-	//update and resize should mirror this function
-	this.layerIndex = this.plotLayers.map(function(d) { return d.label; });//used to determine if layers have changed
-	
-	//anticipates other layer types, but not for this project
-	this.plotLayers.forEach(function(d){
-		if(d.type == "heatmap"){
-			that.addCells(d)
-		} else if(d.type == "globalMap"){
-			
-		} else {
-			alert("Wrong Layer Type!")
-		}
-	});
-
+	this.routeLayers(this.plotLayers);
+	this.addTooltip(chartElement);
 }
 
 pisaChart.prototype.setClipPath = function(chartElement){
@@ -85,13 +72,13 @@ pisaChart.prototype.setClipPath = function(chartElement){
 pisaChart.prototype.routeLayers = function(lys){
 	var that = this;
 	
-	this.layerIndex = this.plotLayers.map(function(d) {return d.label; });
+	this.layerIndex = lys.map(function(d) {return d.label; });
 	
-	this.plotLayers.forEach(function(d){
+	lys.forEach(function(d){
 
 		var layerType = d.type;
 
-		if(layerType == "heatMap") {
+		if(layerType == "heatmap") {
 			that.addCells(d);
 		} else if(d.type == "globalMap"){
 			
@@ -130,7 +117,7 @@ pisaChart.prototype.processScales = function(lys) {
 		colors.push(color);
 		
 	})
-	
+
 	//create scales
 	this.xScale = d3.scaleLinear()
 		.range([0, this.width - (m.right + m.left)])
@@ -336,7 +323,7 @@ pisaChart.prototype.addCells = function(ly) {
 	};
 	var xLength = d3.map( data, function(e) { return +e[ly.x_var]; });
 	
-	var gridSize = Math.floor((this.width - (m.right + m.left))/ObjectLength(xLength));
+	var gridSize = Math.floor((this.width - (m.right + m.left))/32);
 	
 	var cells = this.chart.selectAll('.heatCell')
 		.data(data);
@@ -358,7 +345,21 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white');
+		.style('fill', 'white')
+		.on('mouseover', function(d){
+			console.log(d[ly.z_var]);
+			that.tooltip.transition()
+				.duration(200)
+				.style("display", "inline-block");
+			that.tooltip
+				.html(ly.y_var + ": " + d[ly.y_var] +
+					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
+					"<br/> " + ly.z_var + ": " + d[ly.z_var])
+				.style("left", (d3.event.pageX - 70 ) + "px")
+				.style("top", (d3.event.pageY - 100 ) + "px");
+		
+		})
+		.on('mouseout', function() { that.tooltip.style("display", "none"); });
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)
@@ -367,5 +368,11 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('y', function (d) {return that.yScale(d[ly.y_var]); })
 		.attr('width',gridSize)
 		.attr('height', this.yScale.bandwidth())
-		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); });
+		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
+		;
+}
+
+pisaChart.prototype.addTooltip = function(chartElement) {
+
+	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");
 }
