@@ -51,7 +51,7 @@ pisaChart.prototype.initialize = function(chartElement){
 	//set clip path
 	this.setClipPath(chartElement);
 	this.processScales(this.plotLayers);
-	this.addAxes();
+	if(this.options.plotType != "globalMap")this.addAxes();
 	this.routeLayers(this.plotLayers);
 	this.addTooltip(chartElement);
 }
@@ -81,7 +81,8 @@ pisaChart.prototype.routeLayers = function(lys){
 		if(layerType == "heatmap") {
 			that.addCells(d);
 		} else if(d.type == "globalMap"){
-			
+			that.mapData(d);
+			that.makeMap(d);
 		} else  {
 			//alert("Wrong Layer Type!")
 		}
@@ -90,7 +91,7 @@ pisaChart.prototype.routeLayers = function(lys){
 }
 
 pisaChart.prototype.processScales = function(lys) {
-		var m = this.margin;
+	var m = this.margin;
 	
 	var x_extents = [];
 	var y_extents = [];
@@ -148,7 +149,7 @@ pisaChart.prototype.addAxes = function(){
 		.call(this.xAxis)
 			.selectAll("text")
 				.attr('dy', '.35em')
-				//.attr('dx', '.85em')
+				.attr('dx', '.85em')
 				.attr('text-anchor', 'center');
 	
 	this.plot.append('g')
@@ -171,7 +172,7 @@ pisaChart.prototype.updateAxes = function() {
 		.call(this.xAxis)
 			.selectAll("text")
 				.attr('dy', '.35em')
-				//.attr('dx', '.85em')
+				.attr('dx', '.85em')
 				.attr('text-anchor', 'center');
 	
 	this.svg.selectAll('.y.axis')
@@ -372,7 +373,78 @@ pisaChart.prototype.addCells = function(ly) {
 		;
 }
 
+pisaChart.prototype.mapData = function(ly) {
+	var that = this;
+	
+	//variables to be sent from R
+	var keyData = 'iso2c';
+	var keyMap = 'iso_a2';
+	var period = 'year';
+	var value = 'TM.TAX.TCOM.BC.ZS';
+	var currentPeriod = '2000'
+	
+	var data = [];
+	//create nested JSON object for easier filtering
+	this.plotLayers.forEach(function(d){		
+		var values = d3.nest()
+			.key(function(d) { return d[period]; })
+			.key(function(d) { return d[keyData]; })
+			.entries(d.data);
+		data.push(values);
+	});
+	
+	//filter data to display
+	var valuesToDisplay = {};
+	
+	data[0].filter(function(d) { return d.key == currentPeriod; })[0].values.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return +e[value]; })[0] });
+	
+	window.worldMap[0].features.forEach(function(d) { d.values = valuesToDisplay[d.properties[keyMap]]; })
+	
+	this.values = [];
+	for(var key in valuesToDisplay){
+		var value = valuesToDisplay[key];
+		that.values.push(value);
+	}
+	
+}
+
+pisaChart.prototype.makeMap = function(ly) {
+	var that = this;
+	//set projection
+	this.projection = d3.geoMercator()
+		.scale(150)
+		.translate([
+			(this.width - (m.right+m.left)) / 2,
+			(this.height - (m.top + m.bottom)) / 1.5
+		]);
+		
+	//set path function
+	this.path = d3.geoPath().projection(this.projection);
+	
+	var dataMap = window.worldMap[0];
+
+	var data = dataMap.features;
+	
+	this.polygons = that.plot.append('g')
+		.attr('class', 'map-shapes')
+		.selectAll('path')
+		.data(data)
+		.enter()
+		.append('path')
+		.attr('class', 'polygons')
+		.style('fill', 'whitesmoke')
+		.style('stroke', 'lightgray')
+		.style('stroke-width', 0.5)
+		.attr('d', that.path);
+	
+	this.polygons
+		.transition()
+		.duration(1000)
+		.style('fill', function(d) {return that.colorScale(d.values);});
+}
+
 pisaChart.prototype.addTooltip = function(chartElement) {
 
 	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");
 }
+

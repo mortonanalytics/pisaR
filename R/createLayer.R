@@ -10,9 +10,12 @@ createLayer <- function(pisaR,
     layerData <- pisaR$x$dataset
   }
   pisaR$x$dataset <- NULL
-  pisaR$x$options$borderWidth <- 1
-  layerData <- unname(split(layerData, 1:nrow(layerData)))
 
+  layerData <- unname(split(layerData, 1:nrow(layerData)))
+  ##set plot options
+  pisaR$x$options$borderWidth <- 1
+  if(layerType == "globalMap"){pisaR$x$options$plotType <- "globalMap"
+  }
   ##create layer object
   layer <- list(
     type = layerType,
