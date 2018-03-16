@@ -375,13 +375,14 @@ pisaChart.prototype.addCells = function(ly) {
 
 pisaChart.prototype.mapData = function(ly) {
 	var that = this;
+	var m = this.margin;
 	
 	//variables to be sent from R
 	var keyData = 'iso2c';
 	var keyMap = 'iso_a2';
 	var period = 'year';
-	var value = 'TM.TAX.TCOM.BC.ZS';
-	var currentPeriod = '2000'
+	var value = 'NY.GNS.ICTR.GN.ZS';
+	var currentPeriod = '2011'
 	
 	var data = [];
 	//create nested JSON object for easier filtering
@@ -410,6 +411,7 @@ pisaChart.prototype.mapData = function(ly) {
 
 pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
+	var m = this.margin;
 	//set projection
 	this.projection = d3.geoMercator()
 		.scale(150)
@@ -435,7 +437,20 @@ pisaChart.prototype.makeMap = function(ly) {
 		.style('fill', 'whitesmoke')
 		.style('stroke', 'lightgray')
 		.style('stroke-width', 0.5)
-		.attr('d', that.path);
+		.attr('d', that.path)
+		.on('mouseover', function(d){
+			console.log(d);
+			that.tooltip.transition()
+				.duration(200)
+				.style("display", "inline-block");
+			that.tooltip
+				.html("Country: "  + d.properties.admin +
+					"<br/> " + "Value: " + d.values)
+				.style("left", (d3.event.pageX - 70 ) + "px")
+				.style("top", (d3.event.pageY - 100 ) + "px");
+		
+		})
+		.on('mouseout', function() { that.tooltip.style("display", "none"); });
 	
 	this.polygons
 		.transition()

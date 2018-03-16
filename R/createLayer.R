@@ -1,3 +1,17 @@
+#' Create Plot Layer
+#'
+#' Create plot layer by defining parameters
+#'
+#' @param layerType defines the layer as either a 'heatmap' or 'globalMap' (anticipates future layer types)
+#' @param layerColor a string or vector of strings of HTML recognized colors
+#' @param layerLabel a string unique to the layer for the plot
+#' @param layerData (optional) A data frame or tibble
+#' @param layerMapping a list object of variables defined, eg. list(x_var = "xVar", y_var = "yVar", z_var = "colorVar")
+#'
+#' @return  A list object, pisaR, with layers now attached
+#'
+#' @export
+
 createLayer <- function(pisaR,
                         layerType,
                         layerColor,

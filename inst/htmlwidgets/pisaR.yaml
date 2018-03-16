@@ -8,3 +8,7 @@ dependencies:
   src: htmlwidgets/pisa
   script: ./pisaAPI.js
   stylesheet: ./style.css
+- name: worldMap
+  version: 1.0
+  src: htmlwidgets/pisa
+  script: ./worldMap.js
