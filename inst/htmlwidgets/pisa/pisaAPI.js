@@ -26,7 +26,8 @@ pisaChart.prototype.draw = function(chartElement) {
 	this.svg = d3.select(chartElement).append('svg')
 		.attr('id', chartElement.id + '-svg')
 		.attr('width', this.width)
-		.attr('height', this.height);
+		.attr('height', this.height)
+		.style('background-color', 'AliceBlue');
 	
 	//create g element
 	this.plot = this.svg.append('g')
@@ -105,11 +106,8 @@ pisaChart.prototype.processScales = function(lys) {
 		var z_var = d.z_var;
 	
 		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
-		var y = d3.map(d.data, function(e) { return +e[y_var]; }).keys();
-		var z_min = d3.min( d.data, function(e) { return +e[z_var]; });
-		var z_mean = d3.mean( d.data, function(e) { return +e[z_var]; });
-		var z_max = d3.max( d.data, function(e) { return +e[z_var]; });
-		var z = [z_min, z_mean, z_max];
+		var y = d3.map(d.data, function(e) { return e[y_var]; }).keys();
+		var z = d3.map(d.data, function(e) { return e[z_var]; }).keys();
 		var color = d3.map(d.color, function(e) { return e; }).keys();
 			
 		x_extents.push(x);
@@ -131,8 +129,8 @@ pisaChart.prototype.processScales = function(lys) {
 	this.yScale =  d3.scaleBand()
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
-		
-	this.colorScale = d3.scaleLinear()
+	console.log(colors);	
+	this.colorScale = d3.scaleOrdinal()
 		.range(colors[0])
 		.domain(z_extents[0]);
 }
@@ -376,13 +374,13 @@ pisaChart.prototype.addCells = function(ly) {
 pisaChart.prototype.mapData = function(ly) {
 	var that = this;
 	var m = this.margin;
-	
+	console.log(ly);
 	//variables to be sent from R
-	var keyData = 'iso2c';
-	var keyMap = 'iso_a2';
-	var period = 'year';
-	var value = 'NY.GNS.ICTR.GN.ZS';
-	var currentPeriod = '2011'
+	var keyData = 'ISO';
+	var keyMap = 'ISO_3_CODE';
+	var period = 'Year_Week_number';
+	var value = 'Impact'
+	var currentPeriod = '201710'
 	
 	var data = [];
 	//create nested JSON object for easier filtering
@@ -393,14 +391,16 @@ pisaChart.prototype.mapData = function(ly) {
 			.entries(d.data);
 		data.push(values);
 	});
-	
+	console.log(data);
 	//filter data to display
 	var valuesToDisplay = {};
 	
-	data[0].filter(function(d) { return d.key == currentPeriod; })[0].values.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return +e[value]; })[0] });
+	data[0].filter(function(d) { return d.key == currentPeriod; })[0]
+		.values
+		.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return e[value]; })[0] });
 	
 	window.worldMap[0].features.forEach(function(d) { d.values = valuesToDisplay[d.properties[keyMap]]; })
-	
+	console.log(valuesToDisplay);
 	this.values = [];
 	for(var key in valuesToDisplay){
 		var value = valuesToDisplay[key];
@@ -435,7 +435,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		.append('path')
 		.attr('class', 'polygons')
 		.style('fill', 'whitesmoke')
-		.style('stroke', 'lightgray')
+		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
 		.attr('d', that.path)
 		.on('mouseover', function(d){
@@ -444,8 +444,8 @@ pisaChart.prototype.makeMap = function(ly) {
 				.duration(200)
 				.style("display", "inline-block");
 			that.tooltip
-				.html("Country: "  + d.properties.admin +
-					"<br/> " + "Value: " + d.values)
+				.html("Country: "  + d.properties.CNTRY_TERR +
+					"<br/> " + "Value: " + (d.values ? d.values : "Unreported"))
 				.style("left", (d3.event.pageX - 70 ) + "px")
 				.style("top", (d3.event.pageY - 100 ) + "px");
 		
@@ -455,7 +455,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	this.polygons
 		.transition()
 		.duration(1000)
-		.style('fill', function(d) {return that.colorScale(d.values);});
+		.style('fill', function(d) {return d.values ? that.colorScale(d.values) : "lightgray";});
 }
 
 pisaChart.prototype.addTooltip = function(chartElement) {
