@@ -19,15 +19,14 @@ pisaChart.prototype.draw = function(chartElement) {
 	//define dimensions
 	this.width = chartElement.offsetWidth;
 	this.height = chartElement.offsetHeight;
-	this.margin = { top: 20, right: 20, bottom: 20, left: 20}; //TODO: replace with R controlled margins
+	this.margin = { top: 50, right: 20, bottom: 20, left: 40}; //TODO: replace with R controlled margins
 	
 	//set up parent element and SVG
 	chartElement.innerHTML = '';
 	this.svg = d3.select(chartElement).append('svg')
 		.attr('id', chartElement.id + '-svg')
 		.attr('width', this.width)
-		.attr('height', this.height)
-		.style('background-color', 'AliceBlue');
+		.attr('height', this.height);
 	
 	//create g element
 	this.plot = this.svg.append('g')
@@ -105,7 +104,7 @@ pisaChart.prototype.processScales = function(lys) {
 		var y_var = d.y_var;
 		var z_var = d.z_var;
 	
-		var x = d3.extent( d.data, function(e) { return +e[x_var]; });
+		var x = d3.map( d.data, function(e) { return +e[x_var]; }).keys();
 		var y = d3.map(d.data, function(e) { return e[y_var]; }).keys();
 		var z = d3.map(d.data, function(e) { return e[z_var]; }).keys();
 		var color = d3.map(d.color, function(e) { return e; }).keys();
@@ -118,18 +117,19 @@ pisaChart.prototype.processScales = function(lys) {
 	})
 
 	//create scales
-	this.xScale = d3.scaleLinear()
+	this.xScale = d3.scaleBand()
 		.range([0, this.width - (m.right + m.left)])
 		.domain(x_extents[0]);
 	
 	this.xScale2 = d3.scaleLinear()
 		.range([0, this.width - (m.right + m.left)])
 		.domain(x_extents[0]);
-	
+
 	this.yScale =  d3.scaleBand()
+		.padding(0.2)
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
-	console.log(colors);	
+		
 	this.colorScale = d3.scaleOrdinal()
 		.range(colors[0])
 		.domain(z_extents[0]);
@@ -140,15 +140,17 @@ pisaChart.prototype.addAxes = function(){
 	
 	//create and append axes
 	this.xAxis = d3.axisTop()
-			.scale(this.xScale);
+			.scale(this.xScale)
+			.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
 	
 	this.plot.append('g')
 		.attr("class", "x axis")
 		.call(this.xAxis)
 			.selectAll("text")
 				.attr('dy', '.35em')
-				.attr('dx', '.85em')
-				.attr('text-anchor', 'center');
+				.attr('dx', '.35em')
+				.attr("transform", "rotate(-45)")
+				.attr('text-anchor', 'start');
 	
 	this.plot.append('g')
 		.attr("class", "y axis")
@@ -162,7 +164,8 @@ pisaChart.prototype.updateAxes = function() {
 	var m = this.margin;
 	
 	this.xAxis = d3.axisTop()
-			.scale(this.xScale);
+			.scale(this.xScale)
+			.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
 			
 	this.svg.selectAll('.x.axis')
 		.transition().ease(d3.easeQuad)
@@ -170,8 +173,9 @@ pisaChart.prototype.updateAxes = function() {
 		.call(this.xAxis)
 			.selectAll("text")
 				.attr('dy', '.35em')
-				.attr('dx', '.85em')
-				.attr('text-anchor', 'center');
+				.attr('dx', '.35em')
+				.attr("transform", "rotate(-45)")
+				.attr('text-anchor', 'start');
 	
 	this.svg.selectAll('.y.axis')
 		.transition().ease(d3.easeQuad)
@@ -340,7 +344,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('rx', 4)
 		.attr('ry', 4)
 		.attr('class', 'heatCell')
-		.attr('width',gridSize)
+		.attr('width',this.xScale.bandwidth())
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
@@ -365,7 +369,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.duration(100)
 		.attr('x', function (d) {return that.xScale(d[ly.x_var]); })
 		.attr('y', function (d) {return that.yScale(d[ly.y_var]); })
-		.attr('width',gridSize)
+		.attr('width',this.xScale.bandwidth())
 		.attr('height', this.yScale.bandwidth())
 		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
 		;
@@ -400,7 +404,7 @@ pisaChart.prototype.mapData = function(ly) {
 		.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return e[value]; })[0] });
 	
 	window.worldMap[0].features.forEach(function(d) { d.values = valuesToDisplay[d.properties[keyMap]]; })
-	console.log(valuesToDisplay);
+
 	this.values = [];
 	for(var key in valuesToDisplay){
 		var value = valuesToDisplay[key];
@@ -412,6 +416,7 @@ pisaChart.prototype.mapData = function(ly) {
 pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
 	var m = this.margin;
+	this.svg.style('background-color', 'AliceBlue');
 	//set projection
 	this.projection = d3.geoMercator()
 		.scale(150)
@@ -456,6 +461,19 @@ pisaChart.prototype.makeMap = function(ly) {
 		.transition()
 		.duration(1000)
 		.style('fill', function(d) {return d.values ? that.colorScale(d.values) : "lightgray";});
+	
+	var overlay_data = window.overlay_polygon[0].features;
+	
+	this.overlay_polygons = this.plot.append('g')
+		.attr('class', 'overlay')
+		.selectAll('.overlay_polygons')
+		.data(overlay_data)
+		.enter()
+		.append('path')
+		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
+		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; })
+		.attr('d', this.path);
+	
 }
 
 pisaChart.prototype.addTooltip = function(chartElement) {
