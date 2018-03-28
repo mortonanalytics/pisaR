@@ -4,8 +4,8 @@
 \alias{createLayer}
 \title{Create Plot Layer}
 \usage{
-createLayer(pisaR, layerType, layerColor, layerLabel, layerData = NULL,
-  layerMapping)
+createLayer(pisaR, layerType, layerColor = NULL, layerLabel,
+  layerData = NULL, layerMapping)
 }
 \arguments{
 \item{layerType}{defines the layer as either a 'heatmap' or 'globalMap' (anticipates future layer types)}

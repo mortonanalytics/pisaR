@@ -14,7 +14,7 @@
 
 createLayer <- function(pisaR,
                         layerType,
-                        layerColor,
+                        layerColor = NULL,
                         layerLabel,
                         layerData = NULL,
                         layerMapping ){
@@ -36,16 +36,18 @@ createLayer <- function(pisaR,
     color = layerColor,
     label = layerLabel,
     data = layerData,
+    layerMapping = layerMapping,
     ##plot variables
     x_var = layerMapping$x_var,
     y_var = layerMapping$y_var,
     z_var = layerMapping$z_var
+
   )
 
   ##put the layers together
 
   if(length(pisaR$x$layers) > 0){
-    PopRViz$x$layers <- c(PopRViz$x$layers, list(layer))
+    pisaR$x$layers <- c(pisaR$x$layers, list(layer))
   } else {
     pisaR$x$layers <- list(layer)
   }

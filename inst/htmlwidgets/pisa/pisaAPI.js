@@ -102,13 +102,13 @@ pisaChart.prototype.processScales = function(lys) {
 		
 		var x_var = d.x_var; 
 		var y_var = d.y_var;
-		var z_var = d.z_var;
-	
+		var z_var = d.z_var ? d.z_var : d.layerMapping.color_var;
+		
 		var x = d3.map( d.data, function(e) { return +e[x_var]; }).keys();
 		var y = d3.map(d.data, function(e) { return e[y_var]; }).keys();
 		var z = d3.map(d.data, function(e) { return e[z_var]; }).keys();
 		var color = d3.map(d.color, function(e) { return e; }).keys();
-			
+
 		x_extents.push(x);
 		y_extents.push(y);
 		z_extents.push(z);
@@ -129,10 +129,14 @@ pisaChart.prototype.processScales = function(lys) {
 		.padding(0.2)
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
-		
+		console.log(this.options.color_key);
+		console.log(z_extents[0]);
+	var colors_to_plot = this.options.color_palette ? this.options.color_palette : colors[0];
+	var colors_key = this.options.color_key ? this.options.color_key : z_extents[0];
+	
 	this.colorScale = d3.scaleOrdinal()
-		.range(colors[0])
-		.domain(z_extents[0]);
+		.range(colors_to_plot)
+		.domain(colors_key);
 }
 
 pisaChart.prototype.addAxes = function(){
@@ -380,15 +384,16 @@ pisaChart.prototype.mapData = function(ly) {
 	var m = this.margin;
 	console.log(ly);
 	//variables to be sent from R
-	var keyData = 'ISO';
-	var keyMap = 'ISO_3_CODE';
-	var period = 'Year_Week_number';
-	var value = 'Impact'
-	var currentPeriod = '201710'
+	var keyData = ly.layerMapping.key_data;
+	var keyMap = ly.layerMapping.key_map;
+	var period = ly.layerMapping.time_var;
+	var value = ly.layerMapping.color_var;
+	var currentPeriod = '201610'
 	
 	var data = [];
 	//create nested JSON object for easier filtering
-	this.plotLayers.forEach(function(d){		
+	this.plotLayers.forEach(function(d){
+			console.log(d);
 		var values = d3.nest()
 			.key(function(d) { return d[period]; })
 			.key(function(d) { return d[keyData]; })
@@ -451,8 +456,8 @@ pisaChart.prototype.makeMap = function(ly) {
 			that.tooltip
 				.html("Country: "  + d.properties.CNTRY_TERR +
 					"<br/> " + "Value: " + (d.values ? d.values : "Unreported"))
-				.style("left", (d3.event.pageX - 70 ) + "px")
-				.style("top", (d3.event.pageY - 100 ) + "px");
+				.style("left", (d3.mouse(this)[0]) + 'px')
+				.style("top", (d3.mouse(this)[1]) + 'px');
 		
 		})
 		.on('mouseout', function() { that.tooltip.style("display", "none"); });
@@ -465,13 +470,26 @@ pisaChart.prototype.makeMap = function(ly) {
 	var overlay_data = window.overlay_polygon[0].features;
 	
 	this.overlay_polygons = this.plot.append('g')
-		.attr('class', 'overlay')
-		.selectAll('.overlay_polygons')
+		.attr('class', 'overlay-polygons')
+		.selectAll('.overlay-polygons')
 		.data(overlay_data)
 		.enter()
 		.append('path')
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; })
+		.attr('d', this.path);
+		
+	var overlay_line_data = window.overlay_line[0].features;
+	
+	this.overlays = this.plot.append('g')
+		.attr('class', 'overlay-lines')
+		.selectAll('.overlay-lines')
+		.data(overlay_line_data).enter()
+		.append('path')
+		.style('fill', 'none')
+		.style('stroke', 'lightgray')
+		.style('opacity', 0.5)
+		.style('stroke-dasharray', '2,2')
 		.attr('d', this.path);
 	
 }

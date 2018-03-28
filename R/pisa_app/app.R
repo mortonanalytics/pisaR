@@ -11,12 +11,12 @@ ui <- fluidPage(
    # Sidebar
    sidebarLayout(
       sidebarPanel(
-         selectInput("data", choices = c("Transmission", "Severity"))
+         selectInput(inputId = "data", label = "Select Metric", choices = c("Transmission", "Seriousness", "Impact"))
       ),
 
       # main panel
       mainPanel(
-
+        pisaROutput("map")
       )
    )
 )
@@ -24,6 +24,16 @@ ui <- fluidPage(
 # Define server logic
 server <- function(input, output,session) {
   source("./data_scripts/load_data.R")
+
+  output$map <- renderPisaR({
+    data_plot %>%
+      pisaR()%>%
+      createLayer(layerType = "globalMap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "map",
+                  layerData = data_plot,
+                  layerMapping = list(z_var = input$data))
+  })
 }
 
 # Run the application
