@@ -3,29 +3,32 @@ library(shiny)
 library(dplyr)
 library(pisaR)
 # Define UI for application
-ui <- navbarPage(
-
-   # Application title
-   title = "Pandemic Influenza Severity Index (PISA)",
-
-   # Transmission Tab
-   tabPanel(title = "Transmission",
-     # Sidebar
-     sidebarLayout(
-        sidebarPanel(
-           uiOutput(outputId = "year"),width = 3
+ui <- fluidPage(
+  fluidRow(
+    column(3,br(),br(),br(),
+           sidebarPanel(width = 12,
+                        #img(src = "WHOlogoEN.jpg"),
+                        #br(),
+                        uiOutput(outputId = "year"),
+                        uiOutput(outputId = "transmission_filter"),
+                        uiOutput(outputId = "confidence_level_filter"),
+                        uiOutput(outputId = "week_filter"))),
+    column(9, navbarPage(
+      # Application title
+      title = "Pandemic Influenza Severity Index (PISA)",
+      # Transmission Tab
+      tabPanel(title = "Transmission",
+        pisaROutput("map", width = "100%", height = "375px"),
+        br(),
+        pisaROutput("heatmap", width = "100%", height = "375px")
         ),
-        # main panel
-        mainPanel(pisaROutput("map"),
-                  pisaROutput("heatmap")
-        )
-
-      )
-     ),
-   tabPanel(title = "Seriousness"),
-   tabPanel(title = "Impact"),
-   tabPanel(title = "Country Summary"),
-   tabPanel(title = "About")
+      tabPanel(title = "Seriousness"),
+      tabPanel(title = "Impact"),
+      tabPanel(title = "Country Summary"),
+      tabPanel(title = "About")
+   )
+  )
+ )
 )
 
 # Define server logic
@@ -39,18 +42,46 @@ server <- function(input, output,session) {
     selectInput("year", "Select A Year", choices = year_ui, selected = max(year_ui))
   })
 
+  output$transmission_filter <- renderUI({
+    selectInput("transmission_filter",
+                "Select Transmission Level",
+                choices = transmission_ui,
+                multiple = TRUE,
+                selected = transmission_ui)
+  })
+
+  output$confidence_level_filter <- renderUI({
+    selectInput("cl_filter",
+                "Select Confidence Level",
+                choices = "Not Available in Data")
+  })
+
+  output$week_filter <- renderUI({
+    sliderInput("week_filter",
+                "Week Filter - Map Only",
+                min = min(unique(filter_data()$Year_Week_number)),
+                max = max(unique(filter_data()$Year_Week_number)),
+                value = min(unique(filter_data()$Year_Week_number)),
+                step = 1,
+                sep = "")
+  })
+
   filter_data <- reactive({
     req(input$year)
     data_plot %>%
-      filter(Year.Code == input$year)
+      filter(Year.Code == input$year &
+               Transmission %in% input$transmission_filter)
   })
 
   output$map <- renderPisaR({
+    req(input$week_filter)
       pisaR()%>%
       createLayer(layerType = "globalMap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "map",
-                  layerData = filter_data(),
+                  layerData = filter_data() %>%
+                    select(Transmission, Year_Week_number, ISO) %>%
+                    filter(Year_Week_number == input$week_filter),
                   layerMapping = list(color_var = "Transmission",
                                       time_var = "Year_Week_number",
                                       key_data = "ISO",
@@ -65,7 +96,9 @@ server <- function(input, output,session) {
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
-                  layerData = filter_data(),
+                  layerData = filter_data()%>%
+                    select(Transmission, Year_Week_number, SOV_CODE) %>%
+                    arrange(Year_Week_number),
                   layerMapping = list(x_var = 'Year_Week_number',
                                       y_var = 'SOV_CODE',
                                       z_var = "Transmission")) %>%

@@ -14,3 +14,5 @@ data_plot <- df %>%
          Year_Week_number)
 
 year_ui <- sort(unique(df$Year.Code))
+
+transmission_ui <- unique(df$Transmission)

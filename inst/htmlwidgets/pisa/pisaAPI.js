@@ -31,6 +31,7 @@ pisaChart.prototype.draw = function(chartElement) {
 	//create g element
 	this.plot = this.svg.append('g')
 		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	
 	this.chart = this.plot.append('g');
 	
 	this.context = this.svg.append('g')
@@ -375,6 +376,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('y', function (d) {return that.yScale(d[ly.y_var]); })
 		.attr('width',this.xScale.bandwidth())
 		.attr('height', this.yScale.bandwidth())
+		.style('opacity', 0.8)
 		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
 		;
 }
@@ -382,13 +384,12 @@ pisaChart.prototype.addCells = function(ly) {
 pisaChart.prototype.mapData = function(ly) {
 	var that = this;
 	var m = this.margin;
-	console.log(ly);
+
 	//variables to be sent from R
 	var keyData = ly.layerMapping.key_data;
 	var keyMap = ly.layerMapping.key_map;
 	var period = ly.layerMapping.time_var;
 	var value = ly.layerMapping.color_var;
-	var currentPeriod = '201610'
 	
 	var data = [];
 	//create nested JSON object for easier filtering
@@ -400,11 +401,10 @@ pisaChart.prototype.mapData = function(ly) {
 			.entries(d.data);
 		data.push(values);
 	});
-	console.log(data);
 	//filter data to display
 	var valuesToDisplay = {};
 	
-	data[0].filter(function(d) { return d.key == currentPeriod; })[0]
+	data[0][0]
 		.values
 		.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return e[value]; })[0] });
 	
@@ -420,11 +420,18 @@ pisaChart.prototype.mapData = function(ly) {
 
 pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
-	var m = this.margin;
-	this.svg.style('background-color', 'AliceBlue');
+	var m = { top: 10, right: 10, bottom: 10, left: 10};
+
+	//set background
+	this.chart.append('rect')
+		.attr('class', 'map-background')
+		.attr('width',this.width - (m.right+m.left))
+		.attr('height', this.height - (m.top + m.bottom))
+		.style('fill', 'AliceBlue');
+	
 	//set projection
 	this.projection = d3.geoMercator()
-		.scale(150)
+		.scale(200)
 		.translate([
 			(this.width - (m.right+m.left)) / 2,
 			(this.height - (m.top + m.bottom)) / 1.5
@@ -437,19 +444,20 @@ pisaChart.prototype.makeMap = function(ly) {
 
 	var data = dataMap.features;
 	
-	this.polygons = that.plot.append('g')
+	this.polygons = this.chart.append('g')
 		.attr('class', 'map-shapes')
 		.selectAll('path')
-		.data(data)
-		.enter()
+		.data(data);
+	this.polygons.exit().remove();
+	
+	var newPolygons = this.polygons.enter()
 		.append('path')
-		.attr('class', 'polygons')
+		.attr('class', 'map-shapes')
 		.style('fill', 'whitesmoke')
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
 		.attr('d', that.path)
 		.on('mouseover', function(d){
-			console.log(d);
 			that.tooltip.transition()
 				.duration(200)
 				.style("display", "inline-block");
@@ -462,11 +470,13 @@ pisaChart.prototype.makeMap = function(ly) {
 		})
 		.on('mouseout', function() { that.tooltip.style("display", "none"); });
 	
-	this.polygons
+	this.polygons.merge(newPolygons)
 		.transition()
 		.duration(1000)
+		.attr('d', this.path)
+		.style('opacity', 0.8)
 		.style('fill', function(d) {return d.values ? that.colorScale(d.values) : "lightgray";});
-	
+		
 	var overlay_data = window.overlay_polygon[0].features;
 	
 	this.overlay_polygons = this.plot.append('g')
@@ -499,3 +509,44 @@ pisaChart.prototype.addTooltip = function(chartElement) {
 	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");
 }
 
+pisaChart.prototype.update = function(x){
+	
+	var that = this;
+	var m = this.margin;
+	
+	//layer comparison to identify layers no longer needed
+	this.plotLayers = x.layers;
+	var newLayers = x.layers.map(function(d) { return d.label; });
+	var oldLayers = [];
+	this.layerIndex.forEach(function(d){
+			var x = newLayers.indexOf(d);
+			if(x < 0) {
+				oldLayers.push(d);
+				}
+		});
+	
+	//update dimensions
+	this.width = this.element.offsetWidth;
+	this.height = this.element.offsetHeight;
+	
+	this.svg
+		.attr('width', this.width)
+		.attr('height', this.height);
+	
+	this.plot
+		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
+	
+	//update all the other stuff
+	this.processScales(this.plotLayers);
+	//this.updateClipPath(this.element);
+	this.updateAxes();
+	this.routeLayers(this.plotLayers);
+	//this.updateLegend();
+	//this.updateToolTip(this.element);
+	//this.removeLayers(oldLayers);
+	
+}
+
+pisaChart.prototype.resize = function(){
+	this.draw(this.element)
+}
