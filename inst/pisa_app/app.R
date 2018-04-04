@@ -1,11 +1,3 @@
-#' pisaR Shiny App
-#'
-#' Runs the Shiny App for the PISA Tool
-#'
-#' @return pisaR Shiny Application
-#'
-#' @export
-pisaR_app <- function(){
 library(shiny)
 library(dplyr)
 library(pisaR)
@@ -200,4 +192,4 @@ server <- function(input, output,session) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
-}
+
