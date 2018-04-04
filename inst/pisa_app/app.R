@@ -19,7 +19,7 @@ ui <- fluidPage(
       tabPanel(title = "Transmission",
         pisaROutput("map_transmission", width = "100%", height = "350px"),
         fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-        pisaROutput("heatmap_transmission", width = "100%", height = "340px")
+        shinydashboard::box(pisaROutput("heatmap_transmission", width = "100%", height = "340px"), width = "100%")
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",

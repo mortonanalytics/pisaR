@@ -353,20 +353,19 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white')
-		.on('mouseover', function(d){
-			that.tooltip.transition()
-				.duration(200)
-				.style("display", "inline-block");
-			that.tooltip
-				.html(ly.y_var + ": " + d[ly.y_var] +
-					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
-					"<br/> " + ly.z_var + ": " + d[ly.z_var])
-				.style("left", (d3.mouse(this)[0]) + 'px')
-				.style("top", (d3.mouse(this)[1]) + 'px');
+		.style('fill', 'white');
+		//.on('mouseover', function(d){
+			// that.tooltip
+				// .style("display", "inline-block");
+			// that.tooltip
+				// .html(ly.y_var + ": " + d[ly.y_var] +
+					// "<br/> " + ly.x_var + ": " + d[ly.x_var] +
+					// "<br/> " + ly.z_var + ": " + d[ly.z_var])
+				// .style("left", (d3.mouse(this)[0]) + 'px')
+				// .style("top", (d3.mouse(this)[1]) + 'px');
 		
-		})
-		.on('mouseout', function() { that.tooltip.style("display", "none"); });
+		// })
+		//.on('mouseout', function() { that.tooltip.style("display", "none"); });
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)
@@ -463,7 +462,7 @@ pisaChart.prototype.makeMap = function(ly) {
 				.html("Country: "  + d.properties.CNTRY_TERR +
 					"<br/> " + "Value: " + (d.values ? d.values : "Unreported"))
 				.style("left", (d3.mouse(this)[0]) + 'px')
-				.style("top", (d3.mouse(this)[1]) + 'px');
+				.style("top", (d3.mouse(this)[1]-20) + 'px');
 		
 		})
 		.on('mouseout', function() { that.tooltip.style("display", "none"); });
@@ -665,7 +664,6 @@ pisaChart.prototype.addLegend = function() {
 	
 }
 
-
 pisaChart.prototype.addTooltip = function(chartElement) {
 
 	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");
@@ -676,6 +674,10 @@ pisaChart.prototype.update = function(x){
 	var that = this;
 	var m = this.margin;
 	
+	//remove items that need to be redrawn
+	this.chart.selectAll(".scaleBar").remove();
+	this.chart.selectAll(".scaleText").remove();
+
 	//layer comparison to identify layers no longer needed
 	this.plotLayers = x.layers;
 	var newLayers = x.layers.map(function(d) { return d.label; });
