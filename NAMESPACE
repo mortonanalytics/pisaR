@@ -2,6 +2,7 @@
 
 export(createLayer)
 export(defineColorScale)
+export(definePlotMargin)
 export(pisaR)
 export(pisaROutput)
 export(renderPisaR)

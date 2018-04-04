@@ -1,11 +1,18 @@
-
+#' pisaR Shiny App
+#'
+#' Runs the Shiny App for the PISA Tool
+#'
+#' @return pisaR Shiny Application
+#'
+#' @export
+pisaR_app <- function(){
 library(shiny)
 library(dplyr)
 library(pisaR)
 # Define UI for application
 ui <- fluidPage(
   fluidRow(
-    column(3,br(),br(),br(),
+    column(3, img(src = "WHOlogoEN_small.jpg"),
            sidebarPanel(width = 12,
                         #img(src = "WHOlogoEN.jpg"),
                         #br(),
@@ -18,14 +25,22 @@ ui <- fluidPage(
       title = "Pandemic Influenza Severity Index (PISA)",
       # Transmission Tab
       tabPanel(title = "Transmission",
-        pisaROutput("map", width = "100%", height = "375px"),
-        br(),
-        pisaROutput("heatmap", width = "100%", height = "375px")
+        pisaROutput("map_transmission", width = "100%", height = "350px"),
+        fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+        pisaROutput("heatmap_transmission", width = "100%", height = "340px")
         ),
-      tabPanel(title = "Seriousness"),
-      tabPanel(title = "Impact"),
-      tabPanel(title = "Country Summary"),
-      tabPanel(title = "About")
+      # Seriousness Tab
+      tabPanel(title = "Seriousness",
+               pisaROutput("map_seriousness", width = "100%", height = "350px"),
+               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+               pisaROutput("heatmap_seriousness", width = "100%", height = "340px")),
+      # Impact Tab
+      tabPanel(title = "Impact",
+               pisaROutput("map_impact", width = "100%", height = "350px"),
+               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+               pisaROutput("heatmap_impact", width = "100%", height = "340px"))
+      #tabPanel(title = "Country Summary"),
+      #tabPanel(title = "About")
    )
   )
  )
@@ -72,8 +87,8 @@ server <- function(input, output,session) {
       filter(Year.Code == input$year &
                Transmission %in% input$transmission_filter)
   })
-
-  output$map <- renderPisaR({
+  ############# transmission ###################
+  output$map_transmission <- renderPisaR({
     req(input$week_filter)
       pisaR()%>%
       createLayer(layerType = "globalMap",
@@ -86,12 +101,13 @@ server <- function(input, output,session) {
                                       time_var = "Year_Week_number",
                                       key_data = "ISO",
                                       key_map = "ISO_3_CODE")) %>%
-      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "whitesmoke", "whitesmoke"),
-                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "No Impact", ""))
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
 
   })
 
-  output$heatmap <- renderPisaR({
+  output$heatmap_transmission <- renderPisaR({
       pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
@@ -102,12 +118,86 @@ server <- function(input, output,session) {
                   layerMapping = list(x_var = 'Year_Week_number',
                                       y_var = 'SOV_CODE',
                                       z_var = "Transmission")) %>%
-      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "whitesmoke", "whitesmoke"),
-                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "No Impact", ""))
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin()
+
+  })
+  ############# seriousness ###################
+  output$map_seriousness <- renderPisaR({
+    req(input$week_filter)
+    pisaR()%>%
+      createLayer(layerType = "globalMap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "map",
+                  layerData = filter_data() %>%
+                    select(Seriousness, Year_Week_number, ISO) %>%
+                    filter(Year_Week_number == input$week_filter),
+                  layerMapping = list(color_var = "Seriousness",
+                                      time_var = "Year_Week_number",
+                                      key_data = "ISO",
+                                      key_map = "ISO_3_CODE")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+
+  })
+
+  output$heatmap_seriousness <- renderPisaR({
+    pisaR() %>%
+      createLayer(layerType = "heatmap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "heat",
+                  layerData = filter_data()%>%
+                    select(Seriousness, Year_Week_number, SOV_CODE) %>%
+                    arrange(Year_Week_number),
+                  layerMapping = list(x_var = 'Year_Week_number',
+                                      y_var = 'SOV_CODE',
+                                      z_var = "Seriousness")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin()
+
+  })
+
+  ############# impact ###################
+  output$map_impact <- renderPisaR({
+    req(input$week_filter)
+    pisaR()%>%
+      createLayer(layerType = "globalMap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "map",
+                  layerData = filter_data() %>%
+                    select(Impact, Year_Week_number, ISO) %>%
+                    filter(Year_Week_number == input$week_filter),
+                  layerMapping = list(color_var = "Impact",
+                                      time_var = "Year_Week_number",
+                                      key_data = "ISO",
+                                      key_map = "ISO_3_CODE")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+
+  })
+
+  output$heatmap_impact <- renderPisaR({
+    pisaR() %>%
+      createLayer(layerType = "heatmap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "heat",
+                  layerData = filter_data()%>%
+                    select(Impact, Year_Week_number, SOV_CODE) %>%
+                    arrange(Year_Week_number),
+                  layerMapping = list(x_var = 'Year_Week_number',
+                                      y_var = 'SOV_CODE',
+                                      z_var = "Impact")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+      definePlotMargin()
 
   })
 }
 
 # Run the application
 shinyApp(ui = ui, server = server)
-
+}

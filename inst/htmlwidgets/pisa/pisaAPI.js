@@ -15,11 +15,11 @@ var pisaChart = function(opts) {
 }
 
 pisaChart.prototype.draw = function(chartElement) {
-	
+	var user_margins = this.options.margins;
 	//define dimensions
 	this.width = chartElement.offsetWidth;
 	this.height = chartElement.offsetHeight;
-	this.margin = { top: 50, right: 20, bottom: 20, left: 40}; //TODO: replace with R controlled margins
+	this.margin = { top: user_margins.top, right: user_margins.right, bottom: user_margins.bottom, left: user_margins.left};
 	
 	//set up parent element and SVG
 	chartElement.innerHTML = '';
@@ -130,14 +130,14 @@ pisaChart.prototype.processScales = function(lys) {
 		.padding(0.2)
 		.range([this.height - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
-		console.log(this.options.color_key);
-		console.log(z_extents[0]);
-	var colors_to_plot = this.options.color_palette ? this.options.color_palette : colors[0];
-	var colors_key = this.options.color_key ? this.options.color_key : z_extents[0];
+	
+	if(this.options.color_palette) {var colors_to_plot = this.options.color_palette;} else {var colors_to_plot = colors[0];}
+	if(this.options.color_key) {var colors_key = this.options.color_key;} else {var colors_key = z_extents[0];}
 	
 	this.colorScale = d3.scaleOrdinal()
 		.range(colors_to_plot)
 		.domain(colors_key);
+	
 }
 
 pisaChart.prototype.addAxes = function(){
@@ -355,7 +355,6 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('stroke-width', this.options.borderWidth)
 		.style('fill', 'white')
 		.on('mouseover', function(d){
-			console.log(d[ly.z_var]);
 			that.tooltip.transition()
 				.duration(200)
 				.style("display", "inline-block");
@@ -363,8 +362,8 @@ pisaChart.prototype.addCells = function(ly) {
 				.html(ly.y_var + ": " + d[ly.y_var] +
 					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
 					"<br/> " + ly.z_var + ": " + d[ly.z_var])
-				.style("left", (d3.event.pageX - 70 ) + "px")
-				.style("top", (d3.event.pageY - 100 ) + "px");
+				.style("left", (d3.mouse(this)[0]) + 'px')
+				.style("top", (d3.mouse(this)[1]) + 'px');
 		
 		})
 		.on('mouseout', function() { that.tooltip.style("display", "none"); });
@@ -420,8 +419,7 @@ pisaChart.prototype.mapData = function(ly) {
 
 pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
-	var m = { top: 10, right: 10, bottom: 10, left: 10};
-
+	var m = this.margin;
 	//set background
 	this.chart.append('rect')
 		.attr('class', 'map-background')
@@ -431,7 +429,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	//set projection
 	this.projection = d3.geoMercator()
-		.scale(200)
+		.scale(140)
 		.translate([
 			(this.width - (m.right+m.left)) / 2,
 			(this.height - (m.top + m.bottom)) / 1.5
@@ -502,7 +500,171 @@ pisaChart.prototype.makeMap = function(ly) {
 		.style('stroke-dasharray', '2,2')
 		.attr('d', this.path);
 	
+	this.addScaleLegend();
+	this.addLegend();
 }
+
+pisaChart.prototype.addScaleLegend = function() {
+	// Start Scale ---------------------------------------------------------
+	// baseWidth refers to ideal scale width on the screen it also is the width of the initial measurement point
+	var baseWidth = this.width / 5;
+	var width = this.width - (this.margin.right + this.margin.left);
+	var height = this.height - (this.margin.top + this.margin.bottom);
+	var p1 = this.projection.invert([width/2 - baseWidth/2, height / 2]);
+	var p2 = this.projection.invert([width/2 + baseWidth/2, height / 2]);
+	var distance = getDistance(p1,p2);
+	var unit = "m"; 
+	var multiply = 1; 
+	var bestFit = 1;
+	var increment = 0.1; // This could be scaled to map width maybe width/10000;
+	var scaleDistance = 0;
+	var scaleWidth = 0;
+			
+	if ( distance > 1000 ) { 
+		unit = "km"; multiply = 0.001;			
+	}
+	// Adjust distance to a round(er) number
+	var i = 0;
+	while (i < 400) {
+		var temp = getDistance( this.projection.invert([ width/2 - (baseWidth / 2) + (increment * i), height / 2 ]),  this.projection.invert([ width/2 + baseWidth/2 - (increment * i), height / 2 ]));
+		var ratio = temp / temp.toPrecision(1);
+				
+		// If the second distance is moving away from a cleaner number, reverse direction.
+		if (i == 1) {
+			if (Math.abs(1 - ratio) > bestFit) { increment = - increment; }
+		}
+		// If we are moving away from a best fit after that, break
+		else if (i > 2) {
+			if (Math.abs(1 - ratio) > bestFit) { break }
+		}				
+		// See if the current distance is the cleanest number
+		if (Math.abs(1-ratio) < bestFit) {
+			bestFit = Math.abs(1 - ratio); 
+			scaleDistance = temp; 
+			scaleWidth = (baseWidth) - (2 * increment * i);
+		}
+		i++;
+	}
+						
+	// Now to build the scale			
+	var bars = [];
+	var smallBars = 10; 
+	var bigBars = 4;
+	var odd = true;
+	var label = false;
+			
+	// Populate an array to represent the bars on the scale
+	for (i = 0; i < smallBars; i++) {
+		if (smallBars - 1 > i ) { label = false; } else { label = true; }
+		bars.push( {width: 1 / (smallBars * (bigBars + 1)), offset: i / (smallBars * (bigBars + 1)), label: label, odd: odd } );
+		odd = !odd;
+		}
+	for (i = 0; i < bigBars; i++) {
+		bars.push( {width: 1 / (bigBars + 1), offset: (i + 1) / (bigBars + 1), label: true, odd: odd } );
+		odd = !odd;
+		}
+			
+	// Append the scale
+	this.chart.selectAll(".scaleBar")
+		.data(bars).enter()
+		.append("rect")
+		.attr("x", function(d) { return d.offset * scaleWidth + 20 })
+		.attr("y", height - 30)
+		.attr("width", function(d) { return d.width * scaleWidth})
+		.attr("height", 10)
+		.attr("fill", function (d) { if (d.odd) { return "#eee"; } else { return "#222"; } });
+	this.chart.selectAll(".scaleText") 
+		.data(bars).enter()
+		.filter( function (d) { return d.label == true })
+		.append("text")
+		.attr("class","scaleText")
+		.attr("x",0)
+		.attr("y",0)
+		.style("text-anchor","start")
+		.text(function(d) { return d3.format(",")(((d.offset + d.width) * scaleDistance).toPrecision(2) * multiply); })
+		.attr("transform", function(d) { return "translate("+ ((d.offset + d.width) * scaleWidth + 20 )+","+ (height - 35) +") rotate(-45)" });
+	this.chart.append("text")
+		.attr("x", scaleWidth/2 + 20)
+		.attr("y", height - 5)
+		.text( function() { if(unit == "km") { return "kilometers"; } else { return "metres";}  })
+		.style("text-anchor","middle")
+		.attr("class","scaleText");
+	// End Scale -----------------------------------------
+    
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
+/* Latitude/longitude spherical geodesy tools                         (c) Chris Veness 2002-2016  */
+/*                                                                                   MIT Licence  */
+/* www.movable-type.co.uk/scripts/latlong.html                                                    */
+/* www.movable-type.co.uk/scripts/geodesy/docs/module-latlon-spherical.html                       */
+function getDistance(p1,p2) { 
+		    
+	var lat1 = p1[1];
+	var lat2 = p2[1];
+	var lon1 = p1[0];
+	var lon2 = p2[0];
+			
+	var R = 6371e3; // metres
+	var φ1 = lat1* Math.PI / 180;
+	var φ2 = lat2* Math.PI / 180;
+	var Δφ = (lat2-lat1)* Math.PI / 180;
+	var Δλ = (lon2-lon1)* Math.PI / 180;
+
+	var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	var distance = R * c;
+		
+return distance;
+	
+	}
+}
+
+pisaChart.prototype.addLegend = function() {
+	
+	var that = this;
+	var m = this.margin;
+	
+	var svg = d3.select(this.element).select('svg');
+		
+	//create legend	box (exists in the background)
+	var legendBox = this.chart.append('rect')
+		.attr('class', 'legend-box')
+		.attr("x", this.width - (m.right + m.left + 100))
+		.attr('width', '100px')
+		.attr('height', (this.colorScale.domain().length * 20) + 'px')
+		.style('fill', 'white')
+		.style('opacity', 0.75);
+		
+	console.log(this.colorScale.domain());
+	
+	var legendElement = this.chart.append('g')
+		.selectAll('.legendElement')
+		.data(this.colorScale.domain())
+		.enter()
+		.append('g')
+		.attr('class', 'legendElement')
+		.attr("transform", function(d,i) { return "translate(0," +  i * 20 + ")"; })
+		.attr("font-family", "sans-serif")
+		.attr("font-size", 10)
+		.attr("text-anchor", "end");
+	
+	legendElement.append("rect")
+			.attr("x", that.width - (m.right + m.left + 10))
+			.attr("width", 12)
+			.attr("height", 12)
+			.attr("fill", function(d) { return d.color = that.colorScale(d); });	
+	
+	legendElement.append("text")
+		.attr("x", that.width - (m.right + m.left + 15))
+		.attr("y", 9.5)
+		.attr("dy", "0.15em")
+		.text(function(d) { return d; });
+	
+}
+
 
 pisaChart.prototype.addTooltip = function(chartElement) {
 

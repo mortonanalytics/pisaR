@@ -4,7 +4,7 @@
 \alias{defineColorScale}
 \title{Define Color Scale}
 \usage{
-defineColorScale(pisaR, color_palette, key)
+defineColorScale(pisaR, color_palette, color_key)
 }
 \arguments{
 \item{color_palette}{a list of character strings defining HTML recognized colors}
