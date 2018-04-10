@@ -353,19 +353,19 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white');
-		//.on('mouseover', function(d){
-			// that.tooltip
-				// .style("display", "inline-block");
-			// that.tooltip
-				// .html(ly.y_var + ": " + d[ly.y_var] +
-					// "<br/> " + ly.x_var + ": " + d[ly.x_var] +
-					// "<br/> " + ly.z_var + ": " + d[ly.z_var])
-				// .style("left", (d3.mouse(this)[0]) + 'px')
-				// .style("top", (d3.mouse(this)[1]) + 'px');
+		.style('fill', 'white')
+		.on('mouseover', function(d){
+			that.tooltip
+				.style("display", "inline-block");
+			that.tooltip
+				.html(ly.y_var + ": " + d[ly.y_var] +
+					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
+					"<br/> " + ly.z_var + ": " + d[ly.z_var])
+				.style("left", (d3.mouse(this)[0]) + 'px')
+				.style("top",  that.yScale(d[ly.y_var]));
 		
-		// })
-		//.on('mouseout', function() { that.tooltip.style("display", "none"); });
+		})
+		.on('mouseout', function() { that.tooltip.style("display", "none"); });
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)
