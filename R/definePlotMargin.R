@@ -7,7 +7,7 @@
 #' @return pisaR htmlwidget object
 #'
 #' @export
-definePlotMargin <- function(pisaR, top = 50, left = 40, bottom = 20, right = 20) {
+definePlotMargin <- function(pisaR, top = 50, left = 50, bottom = 0, right = 50) {
   pisaR$x$options$margins$top <- top
   pisaR$x$options$margins$left <- left
   pisaR$x$options$margins$bottom <- bottom

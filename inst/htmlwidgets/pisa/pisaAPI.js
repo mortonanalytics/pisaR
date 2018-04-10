@@ -23,6 +23,9 @@ pisaChart.prototype.draw = function(chartElement) {
 	
 	//set up parent element and SVG
 	chartElement.innerHTML = '';
+	console.log(this.plotLayers[0].type);
+	if(this.plotLayers[0].type == "heatmap") {d3.select(chartElement).style('overflow-y', 'auto');}
+	
 	this.svg = d3.select(chartElement).append('svg')
 		.attr('id', chartElement.id + '-svg')
 		.attr('width', this.width)
@@ -128,7 +131,7 @@ pisaChart.prototype.processScales = function(lys) {
 
 	this.yScale =  d3.scaleBand()
 		.padding(0.2)
-		.range([this.height - (m.top + m.bottom), 0])
+		.range([(y_extents[0].length * 40) - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
 	
 	if(this.options.color_palette) {var colors_to_plot = this.options.color_palette;} else {var colors_to_plot = colors[0];}
@@ -362,7 +365,7 @@ pisaChart.prototype.addCells = function(ly) {
 					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
 					"<br/> " + ly.z_var + ": " + d[ly.z_var])
 				.style("left", (d3.mouse(this)[0]) + 'px')
-				.style("top",  that.yScale(d[ly.y_var]));
+				.style("top",  (d3.mouse(this)[1]) );
 		
 		})
 		.on('mouseout', function() { that.tooltip.style("display", "none"); });
