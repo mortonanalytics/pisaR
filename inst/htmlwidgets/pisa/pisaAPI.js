@@ -356,19 +356,28 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white')
-		.on('mouseover', function(d){
-			that.tooltip
-				.style("display", "inline-block");
-			that.tooltip
-				.html(ly.y_var + ": " + d[ly.y_var] +
-					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
-					"<br/> " + ly.z_var + ": " + d[ly.z_var])
-				.style("left", (d3.mouse(this)[0]) + 'px')
-				.style("top",  (d3.mouse(this)[1]) );
+		.style('fill', 'white');
+		// .on('mouseover', function(d){
+			// var coordinates = [0, 0];
+			// coordinates = d3.mouse(this);
+			// //var x = coordinates[0];
+			// //var y = coordinates[1];
+
+			// // D3 v4
+			// var x = (d3.event.pageX )- (document.getElementById(that.element.id).getBoundingClientRect().left) + 10;
+			// var y = (d3.event.pageY) - (document.getElementById(that.element.id).getBoundingClientRect().height) + 10;
+				// console.log(y);
+			// that.tooltip
+				// .style("display", "inline-block");
+			// that.tooltip
+				// .html(ly.y_var + ": " + d[ly.y_var] +
+					// "<br/> " + ly.x_var + ": " + d[ly.x_var] +
+					// "<br/> " + ly.z_var + ": " + d[ly.z_var])
+				// .style("left", x + 'px')
+				// .style("top",  y + 'px' );
 		
-		})
-		.on('mouseout', function() { that.tooltip.style("display", "none"); });
+		// })
+		// .on('mouseout', function() { that.tooltip.style("display", "none"); });
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)
