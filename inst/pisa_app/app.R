@@ -2,21 +2,31 @@ library(shiny)
 library(dplyr)
 library(pisaR)
 # Define UI for application
-ui <- fluidPage(
+ui <- navbarPage(
+  # Application title with links to WHO and PISA
+  title = HTML('<span class="navtitle">
+               <a rel="home" href="http://who.int" title="World Health Organization">
+               <img class = "whoimg" src="who_logo_white40px.png"></a>
+               <a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page">
+               <span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
+  tabPanel(title = "Home"),
+  tabPanel(title = "Explore Data",
   fluidRow(
-    column(3, img(src = "WHOlogoEN_small.jpg"),
+    column(3,
            sidebarPanel(width = 12,
-                        #img(src = "WHOlogoEN.jpg"),
-                        #br(),
                         uiOutput(outputId = "year"),
                         uiOutput(outputId = "transmission_filter"),
                         uiOutput(outputId = "confidence_level_filter"),
                         uiOutput(outputId = "week_filter"))),
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+    ),
+
     column(9, navbarPage(
-      # Application title
-      title = "Pandemic Influenza Severity Index (PISA)",
-      # Transmission Tab
-      tabPanel(title = "Transmission",
+      title = "",
+      id = "explore",
+      # Transmissability Tab
+      tabPanel(title = "Transmissability",
         pisaROutput("map_transmission", width = "100%", height = "350px"),
         fluidRow(column(9,p("The WHO Disclaimer: need text"))),
         pisaROutput("heatmap_transmission", width = "100%", height = "340px")
@@ -31,11 +41,12 @@ ui <- fluidPage(
                pisaROutput("map_impact", width = "100%", height = "350px"),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
                pisaROutput("heatmap_impact", width = "100%", height = "340px"))
-      #tabPanel(title = "Country Summary"),
-      #tabPanel(title = "About")
-   )
+      )
+    )
   )
- )
+  ),
+  tabPanel(title = "About"),
+  id = "title_bar"
 )
 
 # Define server logic

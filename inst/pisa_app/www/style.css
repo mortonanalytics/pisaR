@@ -1,0 +1,35 @@
+.navbar {
+	background-color: steelblue;
+}
+
+.navbar-default 
+.navbar-nav>li>a {
+	color: white;
+}
+
+/* this next section gives padding etc to the image and 
+title */
+.navtitle{
+    position: relative;
+     font-weight:bold;
+     display: block;
+     margin-top: -15px;
+     margin-right: 5px;
+     height: 50px;
+     padding-top: 5px;
+     text-align: left;
+
+}
+.whoimg{
+    vertical-align: middle;
+    max-height: 40px;
+    float: left;
+    margin-right: 25px;
+}
+.navtext{
+    display: inline-block;
+    height: 100%;
+    padding-top: 12px;
+    font-size: 1em;
+	color: white;
+}
