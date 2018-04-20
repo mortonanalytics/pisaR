@@ -1,36 +1,28 @@
-df <- read.csv("./data/data.csv", stringsAsFactors = FALSE)
+df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
 
-data_plot <- df %>%
-  select(ISO,
-         Code,
-         SOV_CODE,
-         Title,
-         Sovereign,
-         Impact,
-         Transmission,
-         Seriousness,
-         Week.Code,
-         Year.Code,
-         Year_Week_number)
-##clean data
-data_plot$Transmission <- gsub("No impact", "No Impact", data_plot$Transmission)
-data_plot$Transmission <- gsub("Below seasonal threshold", "Below", data_plot$Transmission)
-data_plot$Transmission <- gsub("below", "Below", data_plot$Transmission)
-data_plot$Transmission <- gsub("Extraordinary", "Extra-ordinary", data_plot$Transmission)
+year_ui <- sort(unique(df$ISO_YEAR[nchar(df$ISO_YEAR) == 4])) #Incorrect Year in data
 
-data_plot$Seriousness <- gsub("No impact", "No Impact", data_plot$Seriousness)
-data_plot$Seriousness <- gsub("Below seasonal threshold", "Below", data_plot$Seriousness)
-data_plot$Seriousness <- gsub("below", "Below", data_plot$Seriousness)
-data_plot$Seriousness <- gsub("Extraordinary", "Extra-ordinary", data_plot$Seriousness)
+levels_ui <- c("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Reported") #inconsistent spellings in data
 
-data_plot$Impact <- gsub("No impact", "No Impact", data_plot$Impact)
-data_plot$Impact <- gsub("Below seasonal threshold", "Below", data_plot$Impact)
-data_plot$Impact <- gsub("below", "Below", data_plot$Impact)
-data_plot$Impact <- gsub("Extraordinary", "Extra-ordinary", data_plot$Impact)
-data_plot$Impact <- gsub("Extra-ordiry", "Extra-ordinary", data_plot$Impact)
-data_plot$Impact <- ifelse(data_plot$Impact == "", "Not reported", data_plot$Impact)
+confidence_ui <- c("Low", "Medium", "High", "Not Reported") # insconsistent spellings in data
 
-year_ui <- sort(unique(data_plot$Year.Code))
+who_region_ui <- unique(df$WHOREGION[nchar(df$WHOREGION) == 3])
 
-transmission_ui <- unique(data_plot$Transmission)
+season_ui <- unique(df$FLU_SEASON)
 
+## season calendar generator from data
+create_season <- function(years){
+  # north is on calendar years
+  north_yrs_start <- paste0(years, "-","01")
+  north_yrs_end <- paste0(years, "-", "52")
+  north_yrs <- data.frame(season = "North", dates = paste0(north_yrs_start, " to ", north_yrs_end), stringsAsFactors = F)
+  # south is on mixed years
+  south_yrs_start <- paste0(as.numeric(years) - 1, "-", "39")
+  south_yrs_end <- paste0(years, "-", "16")
+  south_yrs <- data.frame(season = "South", dates = paste0(south_yrs_start, " to ", south_yrs_end), stringsAsFactors = F)
+
+  final_df <- rbind(north_yrs, south_yrs)
+  return(final_df)
+}
+
+season_calendar_ui <- create_season(year_ui)

@@ -14,33 +14,39 @@ ui <- navbarPage(
   fluidRow(
     column(3,
            sidebarPanel(width = 12,
-                        uiOutput(outputId = "year"),
-                        uiOutput(outputId = "transmission_filter"),
+                        uiOutput(outputId = "season_filter"),
+                        uiOutput(outputId = "season_date_filter"),
+                        uiOutput(outputId = "week_filter"),
+                        uiOutput(outputId = "level_filter"),
                         uiOutput(outputId = "confidence_level_filter"),
-                        uiOutput(outputId = "week_filter"))),
+                        uiOutput(outputId = "region_filter")
+                        #uiOutput(outputId = "week_filter")
+                        )
+                        ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
     ),
 
-    column(9, navbarPage(
-      title = "",
+    column(9, tabsetPanel(
       id = "explore",
       # Transmissability Tab
-      tabPanel(title = "Transmissability",
-        pisaROutput("map_transmission", width = "100%", height = "350px"),
-        fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-        pisaROutput("heatmap_transmission", width = "100%", height = "340px")
+      tabPanel(title = "Transmissability"
+       # pisaROutput("map_transmission", width = "100%", height = "350px"),
+        #fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+        #pisaROutput("heatmap_transmission", width = "100%", height = "340px")
         ),
       # Seriousness Tab
-      tabPanel(title = "Seriousness",
-               pisaROutput("map_seriousness", width = "100%", height = "350px"),
-               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               pisaROutput("heatmap_seriousness", width = "100%", height = "340px")),
+      tabPanel(title = "Seriousness"
+               #pisaROutput("map_seriousness", width = "100%", height = "350px"),
+               #fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+               #pisaROutput("heatmap_seriousness", width = "100%", height = "340px")
+               ),
       # Impact Tab
-      tabPanel(title = "Impact",
-               pisaROutput("map_impact", width = "100%", height = "350px"),
-               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               pisaROutput("heatmap_impact", width = "100%", height = "340px"))
+      tabPanel(title = "Impact"
+               #pisaROutput("map_impact", width = "100%", height = "350px"),
+               #fluidRow(column(9,p("The WHO Disclaimer: need text"))),
+               #pisaROutput("heatmap_impact", width = "100%", height = "340px")
+               )
       )
     )
   )
@@ -57,38 +63,63 @@ server <- function(input, output,session) {
 
   ## render UI elements using data available
   output$year <- renderUI({
-    selectInput("year", "Select A Year", choices = year_ui, selected = max(year_ui))
+    selectInput("year_filter", "Select A Year", choices = year_ui, selected = max(year_ui))
   })
 
-  output$transmission_filter <- renderUI({
-    selectInput("transmission_filter",
-                "Select Transmission Level",
-                choices = transmission_ui,
-                multiple = TRUE,
-                selected = transmission_ui)
+  output$level_filter <- renderUI({
+    checkboxGroupInput("level_filter",
+                "Select Level",
+                choices = levels_ui,
+                selected = levels_ui,
+                inline = FALSE)
   })
 
   output$confidence_level_filter <- renderUI({
-    selectInput("cl_filter",
+    checkboxGroupInput("cl_filter",
                 "Select Confidence Level",
-                choices = "Not Available in Data")
+                choices = confidence_ui,
+                selected = confidence_ui)
+  })
+
+  output$region_filter <- renderUI({
+    checkboxGroupInput("region_filter",
+                "Select a Region",
+                choices = who_region_ui,
+                selected = who_region_ui,
+                inline = TRUE)
+  })
+
+  output$season_filter <- renderUI({
+    selectInput("season_filter",
+                "Select a Season",
+                choices = season_ui,
+                selected = "Both")
+  })
+
+  output$season_date_filter <- renderUI({
+    req(input$season_filter)
+    season_dates <- season_calendar_ui$dates[season_calendar_ui$season == ifelse(input$season_filter == "South", "South", "North")]
+    selectInput("season_date_filter",
+                "Select the Flu Season",
+                choices = season_dates,
+                selected = max(season_dates))
   })
 
   output$week_filter <- renderUI({
-    sliderInput("week_filter",
-                "Week Filter - Map Only",
-                min = min(unique(filter_data()$Year_Week_number)),
-                max = max(unique(filter_data()$Year_Week_number)),
-                value = min(unique(filter_data()$Year_Week_number)),
-                step = 1,
-                sep = "")
+    numericInput("week_filter",
+                 "Select a Week in Flu Season",
+                 value = 1,
+                 min = 1,
+                 max = 52)
   })
 
   filter_data <- reactive({
-    req(input$year)
-    data_plot %>%
-      filter(Year.Code == input$year &
-               Transmission %in% input$transmission_filter)
+    req(input$season_date_filter)
+    dates <- c(unlist(strsplit(input$season_date_filter, split = " ")))
+    dates <- gsub("-", "", dates)
+
+    df <-df %>%
+      filter(as.numeric(df$ISOYW) >= as.numeric(dates[[1]][1]) & as.numeric(df$ISO_YW) <= as.numeric(dates[[1]][3]))
   })
   ############# transmission ###################
   output$map_transmission <- renderPisaR({
