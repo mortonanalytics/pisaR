@@ -30,7 +30,8 @@ ui <- navbarPage(
     column(9, tabsetPanel(
       id = "explore",
       # Transmissability Tab
-      tabPanel(title = "Transmissability"
+      tabPanel(title = "Transmissability",
+               dataTableOutput("map_transmission")
        # pisaROutput("map_transmission", width = "100%", height = "350px"),
         #fluidRow(column(9,p("The WHO Disclaimer: need text"))),
         #pisaROutput("heatmap_transmission", width = "100%", height = "340px")
@@ -117,29 +118,37 @@ server <- function(input, output,session) {
     req(input$season_date_filter)
     dates <- c(unlist(strsplit(input$season_date_filter, split = " ")))
     dates <- gsub("-", "", dates)
+    start <- dates[1]
+    end <- dates[3]
 
-    df <-df %>%
-      filter(as.numeric(df$ISOYW) >= as.numeric(dates[[1]][1]) & as.numeric(df$ISO_YW) <= as.numeric(dates[[1]][3]))
+    df_this <- df %>%
+      filter(ISOYW >= start) %>%
+      filter(ISOYW <= end)
+
+    return(df_this)
   })
   ############# transmission ###################
-  output$map_transmission <- renderPisaR({
-    req(input$week_filter)
-      pisaR()%>%
-      createLayer(layerType = "globalMap",
-                  layerColor = list("green","yellow", "orange", "red", "darkred"),
-                  layerLabel = "map",
-                  layerData = filter_data() %>%
-                    select(Transmission, Year_Week_number, ISO) %>%
-                    filter(Year_Week_number == input$week_filter),
-                  layerMapping = list(color_var = "Transmission",
-                                      time_var = "Year_Week_number",
-                                      key_data = "ISO",
-                                      key_map = "ISO_3_CODE")) %>%
-      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
-
+  output$map_transmission <- renderDataTable({
+        filter_data()
   })
+  # output$map_transmission <- renderPisaR({
+  #   req(input$week_filter)
+  #     pisaR()%>%
+  #     createLayer(layerType = "globalMap",
+  #                 layerColor = list("green","yellow", "orange", "red", "darkred"),
+  #                 layerLabel = "map",
+  #                 layerData = filter_data() %>%
+  #                   select(Transmission, Year_Week_number, ISO) %>%
+  #                   filter(Year_Week_number == input$week_filter),
+  #                 layerMapping = list(color_var = "Transmission",
+  #                                     time_var = "Year_Week_number",
+  #                                     key_data = "ISO",
+  #                                     key_map = "ISO_3_CODE")) %>%
+  #     defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+  #                      color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+  #     definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+  #
+  # })
 
   output$heatmap_transmission <- renderPisaR({
       pisaR() %>%
