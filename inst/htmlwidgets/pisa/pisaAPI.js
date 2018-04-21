@@ -17,13 +17,12 @@ var pisaChart = function(opts) {
 pisaChart.prototype.draw = function(chartElement) {
 	var user_margins = this.options.margins;
 	//define dimensions
-	this.width = chartElement.offsetWidth;
+	this.width = chartElement.offsetWidth-30;
 	this.height = chartElement.offsetHeight;
 	this.margin = { top: user_margins.top, right: user_margins.right, bottom: user_margins.bottom, left: user_margins.left};
 	
 	//set up parent element and SVG
 	chartElement.innerHTML = '';
-	console.log(this.plotLayers[0].type);
 	if(this.plotLayers[0].type == "heatmap") {d3.select(chartElement).style('overflow-y', 'auto');}
 	
 	this.svg = d3.select(chartElement).append('svg')
@@ -356,28 +355,27 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'white')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white');
-		// .on('mouseover', function(d){
-			// var coordinates = [0, 0];
-			// coordinates = d3.mouse(this);
-			// //var x = coordinates[0];
-			// //var y = coordinates[1];
+		.style('fill', 'white')
+		.on('mouseover', function(d){
+			var coordinates = [0, 0];
+			coordinates = d3.mouse(this);
+			//var x = coordinates[0];
+			//var y = coordinates[1];
 
-			// // D3 v4
-			// var x = (d3.event.pageX )- (document.getElementById(that.element.id).getBoundingClientRect().left) + 10;
-			// var y = (d3.event.pageY) - (document.getElementById(that.element.id).getBoundingClientRect().height) + 10;
-				// console.log(y);
-			// that.tooltip
-				// .style("display", "inline-block");
-			// that.tooltip
-				// .html(ly.y_var + ": " + d[ly.y_var] +
-					// "<br/> " + ly.x_var + ": " + d[ly.x_var] +
-					// "<br/> " + ly.z_var + ": " + d[ly.z_var])
-				// .style("left", x + 'px')
-				// .style("top",  y + 'px' );
+			// D3 v4
+			var x = (d3.event.pageX)- (document.getElementById(that.element.id).getBoundingClientRect().left) +100;
+			var y = (d3.event.pageY) - (document.getElementById(that.element.id).getBoundingClientRect().height)+100;
+			that.tooltip
+				.style("display", "inline-block");
+			that.tooltip
+				.html(ly.y_var + ": " + d[ly.y_var] +
+					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
+					"<br/> " + ly.z_var + ": " + d[ly.z_var])
+				.style("left", x + 'px')
+				.style("top",  y + 'px' );
 		
-		// })
-		// .on('mouseout', function() { that.tooltip.style("display", "none"); });
+		})
+		.on('mouseout', function() { that.tooltip.style("display", "none"); });
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)

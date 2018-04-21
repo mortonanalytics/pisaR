@@ -4,7 +4,7 @@
 \alias{definePlotMargin}
 \title{Define Plot Margins}
 \usage{
-definePlotMargin(pisaR, top = 50, left = 40, bottom = 20, right = 20)
+definePlotMargin(pisaR, top = 50, left = 50, bottom = 0, right = 50)
 }
 \arguments{
 \item{top, left, bottom, right}{numeric values representing respective plot margins}
