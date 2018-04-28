@@ -33,19 +33,19 @@ ui <- navbarPage(
       tabPanel(title = "Transmissability",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "350px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "340px"))
+               fluidRow(pisaROutput("heatmap_transmission", width = "100%"))
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
                fluidRow(pisaROutput("map_seriousness", width = "100%", height = "350px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_seriousness", width = "100%", height = "340px"))
+               fluidRow(pisaROutput("heatmap_seriousness", width = "100%"))
                ),
       # Impact Tab
       tabPanel(title = "Impact",
                fluidRow(pisaROutput("map_impact", width = "100%", height = "350px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_impact", width = "100%", height = "340px"))
+               fluidRow(pisaROutput("heatmap_impact", width = "100%"))
                )
       )
     )

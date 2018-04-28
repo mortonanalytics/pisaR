@@ -23,7 +23,7 @@ pisaChart.prototype.draw = function(chartElement) {
 	
 	//set up parent element and SVG
 	chartElement.innerHTML = '';
-	if(this.plotLayers[0].type == "heatmap") {d3.select(chartElement).style('overflow-y', 'auto');}
+	//if(this.plotLayers[0].type == "heatmap") {d3.select(chartElement).style('overflow-y', 'auto');}
 	
 	this.svg = d3.select(chartElement).append('svg')
 		.attr('id', chartElement.id + '-svg')
@@ -52,7 +52,7 @@ pisaChart.prototype.initialize = function(chartElement){
 	var that = this;
 	
 	//set clip path
-	this.setClipPath(chartElement);
+	if(this.options.plotType == "globalMap")this.setClipPath(chartElement);
 	this.processScales(this.plotLayers);
 	if(this.options.plotType != "globalMap")this.addAxes();
 	this.routeLayers(this.plotLayers);
@@ -121,15 +121,13 @@ pisaChart.prototype.processScales = function(lys) {
 
 	//create scales
 	this.xScale = d3.scaleBand()
-		.range([0, this.width - (m.right + m.left)])
+		.rangeRound([0, this.width - (m.right + m.left)])
 		.domain(x_extents[0]);
-	
-	this.xScale2 = d3.scaleLinear()
-		.range([0, this.width - (m.right + m.left)])
-		.domain(x_extents[0]);
+		
+		console.log(x_extents);
 
 	this.yScale =  d3.scaleBand()
-		.padding(0.2)
+		//.padding(0.2)
 		.range([(y_extents[0].length * 40) - (m.top + m.bottom), 0])
 		.domain(y_extents[0]);
 	
@@ -147,8 +145,8 @@ pisaChart.prototype.addAxes = function(){
 	
 	//create and append axes
 	this.xAxis = d3.axisTop()
-			.scale(this.xScale)
-			.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
+			.scale(this.xScale);
+			//.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
 	
 	this.plot.append('g')
 		.attr("class", "x axis")
@@ -164,6 +162,7 @@ pisaChart.prototype.addAxes = function(){
 		.call(d3.axisLeft(this.yScale))
 			.selectAll("text")
 				.attr("dx", "-.25em");
+			
 }
 
 pisaChart.prototype.updateAxes = function() {
@@ -171,8 +170,8 @@ pisaChart.prototype.updateAxes = function() {
 	var m = this.margin;
 	
 	this.xAxis = d3.axisTop()
-			.scale(this.xScale)
-			.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
+			.scale(this.xScale);
+			//.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
 			
 	this.svg.selectAll('.x.axis')
 		.transition().ease(d3.easeQuad)
@@ -317,6 +316,7 @@ pisaChart.prototype.setZoom = function(chartElement) {
 
 pisaChart.prototype.addCells = function(ly) {
 	
+	
 	var that = this;
 	var m = this.margin;
 	
@@ -348,14 +348,12 @@ pisaChart.prototype.addCells = function(ly) {
 		.append('rect')
 		.attr('x', function (d) {return that.xScale(d[ly.x_var]); })
 		.attr('y', function (d) {return that.yScale(d[ly.y_var]); })
-		.attr('rx', 4)
-		.attr('ry', 4)
 		.attr('class', 'heatCell')
 		.attr('width',this.xScale.bandwidth())
 		.attr('height', this.yScale.bandwidth())
-		.style('stroke', 'white')
+		.style('stroke', 'whitesmoke')
 		.style('stroke-width', this.options.borderWidth)
-		.style('fill', 'white')
+		.style('fill', 'lightgray')
 		.on('mouseover', function(d){
 			var coordinates = [0, 0];
 			coordinates = d3.mouse(this);
@@ -387,6 +385,47 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('opacity', 0.8)
 		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
 		;
+	this.addGrid();
+}
+
+pisaChart.prototype.addGrid = function(){
+	
+	var that = this;
+	var m = this.margin;
+	
+	var x_range = this.xScale.domain();
+	var y_range = this.yScale.domain();
+	
+	var x_grid = that.chart
+		.selectAll('.x-gridLine')
+		.data(x_range);
+		
+	x_grid.exit().remove();
+	
+	x_grid.enter()	
+		.append('line')
+		.attr('class', 'x-gridLine')
+		.attr('x1', function(d) { return that.xScale(d); })
+		.attr('x2', function(d) { return that.xScale(d); })
+		.attr('y1', that.height - (m.top + m.bottom) )
+		.attr('y2', 0)
+		.style('stroke', 'whitesmoke');
+		
+	var y_grid = that.chart
+		.selectAll('.y-gridLine')
+		.data(y_range);
+
+	y_grid.exit().remove();
+	
+	y_grid.enter()
+		.append('line')
+		.attr('class', 'y-gridLine')
+		.attr('x1', 0)
+		.attr('x2', this.width - (m.left + m.right))
+		.attr('y1', function(d) { return that.yScale(d); })
+		.attr('y2',  function(d) { return that.yScale(d); })
+		.style('stroke', 'whitesmoke')
+		.style('stroke-width', 6);
 }
 
 pisaChart.prototype.mapData = function(ly) {
@@ -687,6 +726,9 @@ pisaChart.prototype.update = function(x){
 	//remove items that need to be redrawn
 	this.chart.selectAll(".scaleBar").remove();
 	this.chart.selectAll(".scaleText").remove();
+	//erase grids on redraw
+	this.chart.selectAll('.x-gridLine').remove();
+	this.chart.selectAll('.y-gridLine').remove();
 
 	//layer comparison to identify layers no longer needed
 	this.plotLayers = x.layers;
