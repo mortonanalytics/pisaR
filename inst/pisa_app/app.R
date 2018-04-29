@@ -32,20 +32,27 @@ ui <- navbarPage(
       # Transmissability Tab
       tabPanel(title = "Transmissability",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "350px")),
-               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_transmission", width = "100%"))
+               fluidRow(column(9,p("The boundaries and names shown and the designations used on this map do not imply
+                                   the expression of any opinion whatsoever on the part of the World Health
+                                   Organization concerning the legal status of any country, territory, city or area or of its
+                                   authorities, or concerning the delimitation of its frontiers or boundaries. Dotted and
+                                   dashed lines on maps represent approximate border lines for which there may not yet
+                                   be full agreement.")),
+                        column(2),
+                        column(1,HTML("&copy;", "WHO 2014"))),
+               fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "750px"))
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
                fluidRow(pisaROutput("map_seriousness", width = "100%", height = "350px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_seriousness", width = "100%"))
+               fluidRow(pisaROutput("heatmap_seriousness", width = "100%", height = "750px"))
                ),
       # Impact Tab
       tabPanel(title = "Impact",
                fluidRow(pisaROutput("map_impact", width = "100%", height = "350px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
-               fluidRow(pisaROutput("heatmap_impact", width = "100%"))
+               fluidRow(pisaROutput("heatmap_impact", width = "100%", height = "750px"))
                )
       )
     )
@@ -98,7 +105,8 @@ server <- function(input, output,session) {
 
   output$season_date_filter <- renderUI({
     req(input$season_filter)
-    season_dates <- season_calendar_ui$dates[season_calendar_ui$season == ifelse(input$season_filter == "South", "South", "North")]
+    season_dates <- season_calendar_ui$dates[season_calendar_ui$season == ifelse(input$season_filter == "South", "South",
+                                                                                 ifelse(input$season_filter == "North", "North", "Both"))]
     selectInput("season_date_filter",
                 "Select the Flu Season",
                 choices = season_dates,
@@ -129,21 +137,24 @@ server <- function(input, output,session) {
         filter(ISOYW <= end) %>%
         filter(WHOREGION %in% input$region_filter) %>%
         filter(TRANSMISSION %in% input$level_filter) %>%
-        filter(TRANSMISSION_CL %in% input$cl_filter)
+        filter(TRANSMISSION_CL %in% input$cl_filter) %>%
+        filter(!is.null(ISOYW))
     } else if(input$explore == "Seriousness"){
       df_this <- df %>%
         filter(ISOYW >= start) %>%
         filter(ISOYW <= end) %>%
         filter(WHOREGION %in% input$region_filter) %>%
         filter(SERIOUSNESS %in% input$level_filter) %>%
-        filter(SERIOUSNESS_CL %in% input$cl_filter)
+        filter(SERIOUSNESS_CL %in% input$cl_filter)%>%
+        filter(!is.null(ISOYW))
     } else if(input$explore == "Impact") {
       df_this <- df %>%
         filter(ISOYW >= start) %>%
         filter(ISOYW <= end) %>%
         filter(WHOREGION %in% input$region_filter) %>%
         filter(IMPACT %in% input$level_filter) %>%
-        filter(IMPACT_CL %in% input$cl_filter)
+        filter(IMPACT_CL %in% input$cl_filter)%>%
+        filter(!is.null(ISOYW))
     }
 
     return(df_this)

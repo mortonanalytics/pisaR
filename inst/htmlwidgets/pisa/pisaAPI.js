@@ -407,7 +407,7 @@ pisaChart.prototype.addGrid = function(){
 		.attr('class', 'x-gridLine')
 		.attr('x1', function(d) { return that.xScale(d); })
 		.attr('x2', function(d) { return that.xScale(d); })
-		.attr('y1', that.height - (m.top + m.bottom) )
+		.attr('y1', y_range.length * that.yScale.bandwidth() )
 		.attr('y2', 0)
 		.style('stroke', 'whitesmoke');
 		
@@ -420,8 +420,8 @@ pisaChart.prototype.addGrid = function(){
 	y_grid.enter()
 		.append('line')
 		.attr('class', 'y-gridLine')
-		.attr('x1', 0)
-		.attr('x2', this.width - (m.left + m.right))
+		.attr('x1', this.xScale(x_range[0]) )
+		.attr('x2', this.xScale(x_range[x_range.length -1] ) + this.xScale.bandwidth() )
 		.attr('y1', function(d) { return that.yScale(d); })
 		.attr('y2',  function(d) { return that.yScale(d); })
 		.style('stroke', 'whitesmoke')
@@ -528,12 +528,17 @@ pisaChart.prototype.makeMap = function(ly) {
 	this.overlay_polygons = this.plot.append('g')
 		.attr('class', 'overlay-polygons')
 		.selectAll('.overlay-polygons')
-		.data(overlay_data)
-		.enter()
+		.data(overlay_data);
+	
+	this.overlay_polygons.exit().remove()
+	
+	this.overlay_polygons.enter()
 		.append('path')
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; })
 		.attr('d', this.path);
+		
+	
 		
 	var overlay_line_data = window.overlay_line[0].features;
 	
@@ -742,7 +747,7 @@ pisaChart.prototype.update = function(x){
 		});
 	
 	//update dimensions
-	this.width = this.element.offsetWidth;
+	this.width = this.element.offsetWidth-30;
 	this.height = this.element.offsetHeight;
 	
 	this.svg

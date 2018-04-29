@@ -20,8 +20,10 @@ create_season <- function(years){
   south_yrs_start <- paste0(as.numeric(years) - 1, "-", "39")
   south_yrs_end <- paste0(years, "-", "16")
   south_yrs <- data.frame(season = "South", dates = paste0(south_yrs_start, " to ", south_yrs_end), stringsAsFactors = F)
+  # Both Seasons
+  both_yrs <- data.frame(season = "Both", dates = paste0(south_yrs_start, " to ", north_yrs_end), stringsAsFactors = F)
 
-  final_df <- rbind(north_yrs, south_yrs)
+  final_df <- rbind(north_yrs, south_yrs, both_yrs)
   return(final_df)
 }
 
