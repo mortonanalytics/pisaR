@@ -3,12 +3,9 @@ library(dplyr)
 library(pisaR)
 # Define UI for application
 ui <- navbarPage(
+  windowTitle = "WHO | PISA",
   # Application title with links to WHO and PISA
-  title = HTML('<span class="navtitle">
-               <a rel="home" href="http://who.int" title="World Health Organization">
-               <img class = "whoimg" src="who_logo_white40px.png"></a>
-               <a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page">
-               <span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
+  title = HTML('<span class="navtitle"><a rel="home" href="http://who.int" title="World Health Organization"><img class = "whoimg" src="who_logo_white40px.png"></a><a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page"><span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
   tabPanel(title = "Home"),
   tabPanel(title = "Explore Data",
   fluidRow(
@@ -31,7 +28,7 @@ ui <- navbarPage(
       id = "explore",
       # Transmissability Tab
       tabPanel(title = "Transmissability",
-               fluidRow(pisaROutput("map_transmission", width = "100%", height = "350px")),
+               fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
                fluidRow(column(9,p("The boundaries and names shown and the designations used on this map do not imply
                                    the expression of any opinion whatsoever on the part of the World Health
                                    Organization concerning the legal status of any country, territory, city or area or of its
@@ -44,13 +41,13 @@ ui <- navbarPage(
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
-               fluidRow(pisaROutput("map_seriousness", width = "100%", height = "350px")),
+               fluidRow(pisaROutput("map_seriousness", width = "100%", height = "450px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
                fluidRow(pisaROutput("heatmap_seriousness", width = "100%", height = "750px"))
                ),
       # Impact Tab
       tabPanel(title = "Impact",
-               fluidRow(pisaROutput("map_impact", width = "100%", height = "350px")),
+               fluidRow(pisaROutput("map_impact", width = "100%", height = "450px")),
                fluidRow(column(9,p("The WHO Disclaimer: need text"))),
                fluidRow(pisaROutput("heatmap_impact", width = "100%", height = "750px"))
                )
@@ -172,9 +169,11 @@ server <- function(input, output,session) {
                   layerMapping = list(color_var = "TRANSMISSION",
                                       time_var = "ISO_YW",
                                       key_data = "COUNTRY_CODE",
-                                      key_map = "ISO_3_CODE")) %>%
+                                      key_map = "ISO_3_CODE",
+                                      cl_var = "TRANSMISSION_CL",
+                                      com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
 
   })
@@ -189,9 +188,11 @@ server <- function(input, output,session) {
                     arrange(ISOYW),
                   layerMapping = list(x_var = 'ISOYW',
                                       y_var = 'COUNTRY_TITLE',
-                                      z_var = "TRANSMISSION")) %>%
+                                      z_var = "TRANSMISSION",
+                                      cl_var = "TRANSMISSION_CL",
+                                      com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(left = 100)
 
   })
@@ -210,7 +211,7 @@ server <- function(input, output,session) {
                                       key_data = "COUNTRY_CODE",
                                       key_map = "ISO_3_CODE")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
 
   })
@@ -227,8 +228,8 @@ server <- function(input, output,session) {
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "SERIOUSNESS")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
-      definePlotMargin()
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+      definePlotMargin(left = 100)
 
   })
 
@@ -247,7 +248,7 @@ server <- function(input, output,session) {
                                       key_data = "COUNTRY_CODE",
                                       key_map = "ISO_3_CODE")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+                       color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
 
   })
@@ -264,8 +265,8 @@ server <- function(input, output,session) {
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "IMPACT")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
-      definePlotMargin()
+                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+      definePlotMargin(left = 100)
 
   })
 }

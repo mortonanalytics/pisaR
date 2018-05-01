@@ -74,7 +74,7 @@ pisaChart.prototype.setClipPath = function(chartElement){
 
 pisaChart.prototype.routeLayers = function(lys){
 	var that = this;
-	
+
 	this.layerIndex = lys.map(function(d) {return d.label; });
 	
 	lys.forEach(function(d){
@@ -123,8 +123,6 @@ pisaChart.prototype.processScales = function(lys) {
 	this.xScale = d3.scaleBand()
 		.rangeRound([0, this.width - (m.right + m.left)])
 		.domain(x_extents[0]);
-		
-		console.log(x_extents);
 
 	this.yScale =  d3.scaleBand()
 		//.padding(0.2)
@@ -137,7 +135,6 @@ pisaChart.prototype.processScales = function(lys) {
 	this.colorScale = d3.scaleOrdinal()
 		.range(colors_to_plot)
 		.domain(colors_key);
-	
 }
 
 pisaChart.prototype.addAxes = function(){
@@ -191,132 +188,8 @@ pisaChart.prototype.updateAxes = function() {
 				.attr("dx", "-.25em");
 }
 
-pisaChart.prototype.setZoom = function(chartElement) {
-	var that = this;
-	var m = this.margin;
-	
-	//define brush behavior
-	var brush = d3.brushX()
-		.extent([[0,0], [this.width - (m.left + m.right),  100]])
-		.on("brush end", brushed);
-	
-	function brushed(){
-			if (d3.event.sourceEvent && d3.event.sourceEvent.type === 'zoom') return;
-			var s = d3.event.selection || that.xScale2.range();
-			that.xScale.domain(s.map(that.xScale2.invert, that.xScale2));
-				
-			var svg = d3.select(chartElement).select('svg');
-			
-			that.routeLayers(that.plotLayers);
-			
-			that.plot
-				.select(".x.axis").transition().ease(d3.easeLinear)
-				.duration(100)
-				.call(that.xAxis).selectAll("text")				
-					.attr('dy', '.35em')
-					.style('text-anchor', 'center');
-							
-			svg
-				.select('.zoom').call(zoom.transform, d3.zoomIdentity
-				.scale((that.width - (m.right + m.left) )/ (s[1] - s[0]))
-				.translate(-s[0],0));
-				
-			if(that.handle){
-				that.handle.attr("display", null).attr("transform", function(d, i) { return "translate(" + [ s[i], - 0] + ")"; });
-			}
-		}
-	//define zoom behavior
-	var zoom = d3.zoom()
-		.scaleExtent([1, Infinity])
-		.translateExtent([
-			[0,0],
-			[this.width- (m.right + m.left), this.height - (m.top + m.bottom)]
-		])
-		.extent([
-			[0,0],
-			[this.width- (m.right + m.left), this.height - (m.top + m.bottom)]
-		])
-		.on('zoom', zoomed);
-		
-	//draw context bar for brush/zoom control
-	if(this.brushLine){
-		
-		this.brushLine
-			.attr('x1', 0)
-			.attr('x2', this.width - (m.right + m.left ))
-			.attr('y1', 8)
-			.attr('y2', 8);
-			
-		this.brush
-			.call(brush)
-			.call(brush.move, this.xScale.range());	
-			
-		} else {
-			
-			this.brushLine = this.context
-				.append('line')
-				.attr('x1', 0)
-				.attr('x2', this.width - (m.right + m.left ))
-				.attr('y1', 8)
-				.attr('y2', 8)
-				.style('stroke-width', 10)
-				.style('stroke', 'lightsteelblue');
-		
-			this.brush = this.context.append('g')
-				.attr('class', 'brush')
-				.attr('y', 0)
-				.call(brush)
-				.call(brush.move, this.xScale.range());
-				
-			this.handle = this.brush.selectAll(".handle--custom")
-			  .data([{type: "w"}, {type: "e"}])
-			  .enter().append("path")
-				.attr("class", "handle--custom")
-				.attr('y', 0)
-				.attr("fill", "gray")
-				.attr("fill-opacity", 0.8)
-				.attr("d", d3.arc()
-					.innerRadius(0)
-					.outerRadius(7)
-					.startAngle(0)
-					.endAngle(function(d, i) { return i ? Math.PI : -Math.PI; }));
-				
-		}
-	
-	function zoomed(){
-			if (d3.event.sourceEvent && d3.event.sourceEvent.type === 'brushed') return;
-			var t = d3.event.transform;
-			that.xScale(t.rescaleX(that.xScale2).domain());
-			
-			that.routeLayers();
-			
-			that.plot
-				.select(".x.axis").transition().ease(d3.easeLinear)
-				.duration(100)
-				.call(that.xAxis).selectAll("text")				
-					.attr('dy', '.35em')
-					.style('text-anchor', 'center');
-			
-			that.context.select('.brush').call(brush.move, that.xScale.range().map(t.invertX, t));
-		}	
-		
-	
-	//call zoom behavior from plot area
-	d3.select(this.element).select('svg').append('rect')
-			.attr('class', 'zoom')
-			.style('fill', 'none')
-			.style('cursor', 'move')
-			.style('pointer-events', 'all')
-			.attr('width',this.width - (m.right + m.left))
-			.attr('height', this.height - (m.top + m.bottom))
-			.attr('transform',"translate(" + this.margin.left + "," + this.margin.top + ")")
-			.call(zoom);
-	
-}
-
 pisaChart.prototype.addCells = function(ly) {
-	
-	
+		
 	var that = this;
 	var m = this.margin;
 	
@@ -354,26 +227,19 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', this.options.borderWidth)
 		.style('fill', 'lightgray')
-		.on('mouseover', function(d){
-			var coordinates = [0, 0];
-			coordinates = d3.mouse(this);
-			//var x = coordinates[0];
-			//var y = coordinates[1];
-
-			// D3 v4
-			var x = (d3.event.pageX)- (document.getElementById(that.element.id).getBoundingClientRect().left) +100;
-			var y = (d3.event.pageY) - (document.getElementById(that.element.id).getBoundingClientRect().height)+100;
-			that.tooltip
-				.style("display", "inline-block");
-			that.tooltip
-				.html(ly.y_var + ": " + d[ly.y_var] +
-					"<br/> " + ly.x_var + ": " + d[ly.x_var] +
-					"<br/> " + ly.z_var + ": " + d[ly.z_var])
-				.style("left", x + 'px')
-				.style("top",  y + 'px' );
-		
-		})
-		.on('mouseout', function() { that.tooltip.style("display", "none"); });
+	
+	newCells
+		.append('svg:title')
+		.append(function(d){
+			var span = document.createElement("span");
+			span.innerHTML = ly.y_var + ": " + d[ly.y_var] +
+			"<br/> " + ly.x_var + ": " + d[ly.x_var] +
+			"<br/> " + ly.z_var + ": " + d[ly.z_var] +
+			"<br/> " + ly.cl_var + ": " + d[ly.cl_var] +
+			"<br/> " + ly.com_var + ": " + d[ly.com_var] ;
+			
+			return span
+		});	
 		
 	cells.merge(newCells)
 		.transition().ease(d3.easeLinear)
@@ -385,6 +251,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('opacity', 0.8)
 		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
 		;
+		
 	this.addGrid();
 }
 
@@ -437,6 +304,8 @@ pisaChart.prototype.mapData = function(ly) {
 	var keyMap = ly.layerMapping.key_map;
 	var period = ly.layerMapping.time_var;
 	var value = ly.layerMapping.color_var;
+	var cl_var = ly.layerMapping.cl_var;
+	var com_var = ly.layerMapping.com_var;
 	
 	var data = [];
 	//create nested JSON object for easier filtering
@@ -453,7 +322,10 @@ pisaChart.prototype.mapData = function(ly) {
 	
 	data[0][0]
 		.values
-		.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return e[value]; })[0] });
+		.forEach(function(d) { valuesToDisplay[d.key] = d.values.map(function(e) { return {value: e[value], 
+																						   cl: e[cl_var], 
+																						   com: e[com_var] }; 
+																						 })[0] });
 	
 	window.worldMap[0].features.forEach(function(d) { d.values = valuesToDisplay[d.properties[keyMap]]; })
 
@@ -468,12 +340,18 @@ pisaChart.prototype.mapData = function(ly) {
 pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
 	var m = this.margin;
+	var active = d3.select(null);
+	var zoom = d3.zoom()
+		.scaleExtent([1, 8])
+		.on("zoom", zoomed);
+		
 	//set background
 	this.chart.append('rect')
 		.attr('class', 'map-background')
 		.attr('width',this.width - (m.right+m.left))
 		.attr('height', this.height - (m.top + m.bottom))
-		.style('fill', 'AliceBlue');
+		.style('fill', 'AliceBlue')
+		.on('click', reset);
 	
 	//set projection
 	this.projection = d3.geoMercator()
@@ -490,6 +368,7 @@ pisaChart.prototype.makeMap = function(ly) {
 
 	var data = dataMap.features;
 	
+	//create map polygons
 	this.polygons = this.chart.append('g')
 		.attr('class', 'map-shapes')
 		.selectAll('path')
@@ -503,25 +382,27 @@ pisaChart.prototype.makeMap = function(ly) {
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
 		.attr('d', that.path)
-		.on('mouseover', function(d){
-			that.tooltip.transition()
-				.duration(200)
-				.style("display", "inline-block");
-			that.tooltip
-				.html("Country: "  + d.properties.CNTRY_TERR +
-					"<br/> " + "Value: " + (d.values ? d.values : "Unreported"))
-				.style("left", (d3.mouse(this)[0]) + 'px')
-				.style("top", (d3.mouse(this)[1]-20) + 'px');
+		.on('click', clicked);
 		
-		})
-		.on('mouseout', function() { that.tooltip.style("display", "none"); });
-	
+	newPolygons
+		.append('svg:title')
+		.append(function(d){
+			
+			var span = document.createElement("span");
+			span.innerHTML = "Country: "  + d.properties.CNTRY_TERR +
+			"<br/> " + "Value: " + (d.values ? d.values.value : "Unreported") +
+			"<br/> Confidence Level: " + (d.values ? d.values.cl : "Unreported") +
+			"<br/> Comments: "  + (d.values ? d.values.com : "Unreported");
+			
+			return span
+		});
+		
 	this.polygons.merge(newPolygons)
 		.transition()
 		.duration(1000)
 		.attr('d', this.path)
 		.style('opacity', 0.8)
-		.style('fill', function(d) {return d.values ? that.colorScale(d.values) : "lightgray";});
+		.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";});
 		
 	var overlay_data = window.overlay_polygon[0].features;
 	
@@ -534,12 +415,11 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	this.overlay_polygons.enter()
 		.append('path')
+		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; })
 		.attr('d', this.path);
-		
-	
-		
+				
 	var overlay_line_data = window.overlay_line[0].features;
 	
 	this.overlays = this.plot.append('g')
@@ -548,14 +428,49 @@ pisaChart.prototype.makeMap = function(ly) {
 		.data(overlay_line_data).enter()
 		.append('path')
 		.style('fill', 'none')
-		.style('stroke', 'lightgray')
-		.style('opacity', 0.5)
-		.style('stroke-dasharray', '2,2')
+		.style('stroke', 'gray')
+		.style('stroke-width', 0.5)
+		.style('opacity', 0.7)
+		.style('stroke-dasharray', '1,1')
 		.attr('d', this.path);
 	
 	this.addScaleLegend();
 	this.addLegend();
-}
+	
+	//functions
+	function clicked(d) {
+	  if (active.node() === this) return reset();
+	  active.classed("active", false);
+	  active = d3.select(this).classed("active", true);
+
+	  var bounds = that.path.bounds(d),
+		  dx = bounds[1][0] - bounds[0][0],
+		  dy = bounds[1][1] - bounds[0][1],
+		  x = (bounds[0][0] + bounds[1][0]) / 2,
+		  y = (bounds[0][1] + bounds[1][1]) / 2,
+		  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / that.width, dy / that.height))),
+		  translate = [that.width / 2 - scale * x, that.height / 2 - scale * y];
+
+	  that.svg.transition()
+		  .duration(750)
+		  .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
+	}
+	
+	function zoomed() {
+	  that.plot.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+	  that.plot.attr("transform", d3.event.transform); // updated for d3 v4
+	}
+
+	function reset() {
+	  active.classed("active", false);
+	  active = d3.select(null);
+
+	  that.svg.transition()
+		  .duration(750)
+		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
+	}
+	
+	}
 
 pisaChart.prototype.addScaleLegend = function() {
 	// Start Scale ---------------------------------------------------------
@@ -681,21 +596,22 @@ pisaChart.prototype.addLegend = function() {
 	var m = this.margin;
 	
 	var svg = d3.select(this.element).select('svg');
-		
+	
+	var legendItems = this.options.color_key ? this.options.color_key : this.colorScale.domain();
+	
 	//create legend	box (exists in the background)
 	var legendBox = this.chart.append('rect')
 		.attr('class', 'legend-box')
 		.attr("x", this.width - (m.right + m.left + 100))
 		.attr('width', '100px')
-		.attr('height', (this.colorScale.domain().length * 20) + 'px')
+		.attr('height', (legendItems.length * 20) + 'px')
 		.style('fill', 'white')
 		.style('opacity', 0.75);
 		
-	console.log(this.colorScale.domain());
 	
 	var legendElement = this.chart.append('g')
 		.selectAll('.legendElement')
-		.data(this.colorScale.domain())
+		.data(legendItems)
 		.enter()
 		.append('g')
 		.attr('class', 'legendElement')
@@ -771,3 +687,4 @@ pisaChart.prototype.update = function(x){
 pisaChart.prototype.resize = function(){
 	this.draw(this.element)
 }
+

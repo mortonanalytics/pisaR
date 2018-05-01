@@ -40,7 +40,9 @@ createLayer <- function(pisaR,
     ##plot variables
     x_var = layerMapping$x_var,
     y_var = layerMapping$y_var,
-    z_var = layerMapping$z_var
+    z_var = layerMapping$z_var,
+    cl_var = layerMapping$cl_var,
+    com_var = layerMapping$com_var
 
   )
 

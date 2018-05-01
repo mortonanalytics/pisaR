@@ -46,3 +46,8 @@
   font-weight: 500;
   color: #081F2C;
 }
+
+.background {
+	pointer-events: all;
+	background-color: white;
+}
