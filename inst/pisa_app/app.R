@@ -225,9 +225,9 @@ server <- function(input, output,session) {
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
                   layerData = filter_data()%>%
-                    select(SERIOUSNESS, SERIOUSNESS_CL, SERIOUSNESS_COM,COUNTRY_TITLE, ISOYW) %>%
+                    select(SERIOUSNESS, SERIOUSNESS_CL, SERIOUSNESS_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
                     arrange(ISOYW),
-                  layerMapping = list(x_var = 'ISOYW',
+                  layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "SERIOUSNESS")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
@@ -262,9 +262,9 @@ server <- function(input, output,session) {
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
                   layerData = filter_data()%>%
-                    select(IMPACT, IMPACT_CL, IMPACT_COM,COUNTRY_TITLE, ISOYW) %>%
+                    select(IMPACT, IMPACT_CL, IMPACT_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
                     arrange(ISOYW),
-                  layerMapping = list(x_var = 'ISOYW',
+                  layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "IMPACT")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
