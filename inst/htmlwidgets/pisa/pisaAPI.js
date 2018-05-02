@@ -18,7 +18,7 @@ pisaChart.prototype.draw = function(chartElement) {
 	var user_margins = this.options.margins;
 	//define dimensions
 	this.width = chartElement.offsetWidth-30;
-	this.height = chartElement.offsetHeight;
+	this.height = Math.max(chartElement.offsetHeight, 200);
 	this.margin = { top: user_margins.top, right: user_margins.right, bottom: user_margins.bottom, left: user_margins.left};
 	
 	//set up parent element and SVG
@@ -107,7 +107,7 @@ pisaChart.prototype.processScales = function(lys) {
 		var y_var = d.y_var;
 		var z_var = d.z_var ? d.z_var : d.layerMapping.color_var;
 		
-		var x = d3.map( d.data, function(e) { return +e[x_var]; }).keys();
+		var x = d3.map( d.data, function(e) { return e[x_var]; }).keys();
 		var y = d3.map(d.data, function(e) { return e[y_var]; }).keys();
 		var z = d3.map(d.data, function(e) { return e[z_var]; }).keys();
 		var color = d3.map(d.color, function(e) { return e; }).keys();
@@ -126,7 +126,7 @@ pisaChart.prototype.processScales = function(lys) {
 
 	this.yScale =  d3.scaleBand()
 		//.padding(0.2)
-		.range([(y_extents[0].length * 40) - (m.top + m.bottom), 0])
+		.range([(y_extents[0].length * 40), 0])
 		.domain(y_extents[0]);
 	
 	if(this.options.color_palette) {var colors_to_plot = this.options.color_palette;} else {var colors_to_plot = colors[0];}
@@ -354,11 +354,11 @@ pisaChart.prototype.makeMap = function(ly) {
 		.on('click', reset);
 	
 	//set projection
-	this.projection = d3.geoMercator()
-		.scale(140)
+	this.projection = d3.geoWagner7()
+		.scale(170)
 		.translate([
 			(this.width - (m.right+m.left)) / 2,
-			(this.height - (m.top + m.bottom)) / 1.5
+			(this.height - (m.top + m.bottom)) / 2
 		]);
 		
 	//set path function
@@ -411,7 +411,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		.selectAll('.overlay-polygons')
 		.data(overlay_data);
 	
-	this.overlay_polygons.exit().remove()
+	this.overlay_polygons.exit().remove();
 	
 	this.overlay_polygons.enter()
 		.append('path')
@@ -425,7 +425,10 @@ pisaChart.prototype.makeMap = function(ly) {
 	this.overlays = this.plot.append('g')
 		.attr('class', 'overlay-lines')
 		.selectAll('.overlay-lines')
-		.data(overlay_line_data).enter()
+		.data(overlay_line_data).enter();
+	this.overlays.exit().remove();
+	
+	this.overlays.enter()
 		.append('path')
 		.style('fill', 'none')
 		.style('stroke', 'gray')
@@ -442,7 +445,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	  if (active.node() === this) return reset();
 	  active.classed("active", false);
 	  active = d3.select(this).classed("active", true);
-
+	  
 	  var bounds = that.path.bounds(d),
 		  dx = bounds[1][0] - bounds[0][0],
 		  dy = bounds[1][1] - bounds[0][1],
@@ -464,7 +467,6 @@ pisaChart.prototype.makeMap = function(ly) {
 	function reset() {
 	  active.classed("active", false);
 	  active = d3.select(null);
-
 	  that.svg.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4

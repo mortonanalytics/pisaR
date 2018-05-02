@@ -156,6 +156,8 @@ server <- function(input, output,session) {
 
     return(df_this)
   })
+
+
   ############# transmission ###################
   output$map_transmission <- renderPisaR({
     req(input$week_filter)
@@ -179,14 +181,15 @@ server <- function(input, output,session) {
   })
 
   output$heatmap_transmission <- renderPisaR({
-      pisaR() %>%
+
+    pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
-                  layerData = filter_data()%>%
-                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISOYW) %>%
+                  layerData = filter_data() %>%
+                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISO_YW, ISOYW) %>%
                     arrange(ISOYW),
-                  layerMapping = list(x_var = 'ISOYW',
+                  layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "TRANSMISSION",
                                       cl_var = "TRANSMISSION_CL",

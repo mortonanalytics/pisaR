@@ -12,3 +12,7 @@ dependencies:
   version: 1.0
   src: htmlwidgets/pisa
   script: ./worldMap.js
+- name: d3-geo-projections
+  version: 2.0
+  src: htmlwidgets/pisa
+  script: ./d3-geo-projection.js
