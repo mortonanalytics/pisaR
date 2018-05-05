@@ -121,7 +121,7 @@ pisaChart.prototype.processScales = function(lys) {
 
 	//create scales
 	this.xScale = d3.scaleBand()
-		.rangeRound([0, this.width - (m.right + m.left)])
+		.rangeRound([ 0, Math.min((this.width - (m.right + m.left)), (x_extents[0].length * 40) ) ])
 		.domain(x_extents[0]);
 
 	this.yScale =  d3.scaleBand()
@@ -341,6 +341,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
 	var m = this.margin;
 	var active = d3.select(null);
+
 	var zoom = d3.zoom()
 		.scaleExtent([1, 8])
 		.on("zoom", zoomed);
@@ -413,11 +414,14 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	this.overlay_polygons.exit().remove();
 	
-	this.overlay_polygons.enter()
+	var newOverlayPolygons = this.overlay_polygons.enter()
 		.append('path')
 		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
-		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; })
+		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; });
+		
+	this.overlay_polygons
+		.merge(newOverlayPolygons)
 		.attr('d', this.path);
 				
 	var overlay_line_data = window.overlay_line[0].features;
@@ -425,16 +429,19 @@ pisaChart.prototype.makeMap = function(ly) {
 	this.overlays = this.plot.append('g')
 		.attr('class', 'overlay-lines')
 		.selectAll('.overlay-lines')
-		.data(overlay_line_data).enter();
+		.data(overlay_line_data);
+	
 	this.overlays.exit().remove();
 	
-	this.overlays.enter()
+	var newOverlayLines = this.overlays.enter()
 		.append('path')
 		.style('fill', 'none')
 		.style('stroke', 'gray')
 		.style('stroke-width', 0.5)
-		.style('opacity', 0.7)
-		.style('stroke-dasharray', '1,1')
+		.style('stroke-dasharray', '1,1');
+		
+	this.overlays
+		.merge(newOverlayLines)
 		.attr('d', this.path);
 	
 	this.addScaleLegend();
@@ -453,7 +460,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		  y = (bounds[0][1] + bounds[1][1]) / 2,
 		  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / that.width, dy / that.height))),
 		  translate = [that.width / 2 - scale * x, that.height / 2 - scale * y];
-
+	  Shiny.onInputChange("country_input" ,d3.select(this).data()[0].properties.ISO_3_CODE);
 	  that.svg.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
@@ -467,12 +474,13 @@ pisaChart.prototype.makeMap = function(ly) {
 	function reset() {
 	  active.classed("active", false);
 	  active = d3.select(null);
+	  Shiny.onInputChange("country_input" , null)
 	  that.svg.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
 	}
 	
-	}
+}
 
 pisaChart.prototype.addScaleLegend = function() {
 	// Start Scale ---------------------------------------------------------
@@ -602,16 +610,16 @@ pisaChart.prototype.addLegend = function() {
 	var legendItems = this.options.color_key ? this.options.color_key : this.colorScale.domain();
 	
 	//create legend	box (exists in the background)
-	var legendBox = this.chart.append('rect')
+	var legendBox = this.svg.append('rect')
 		.attr('class', 'legend-box')
-		.attr("x", this.width - (m.right + m.left + 100))
+		.attr("x", this.width - (m.right + m.left))
 		.attr('width', '100px')
 		.attr('height', (legendItems.length * 20) + 'px')
 		.style('fill', 'white')
 		.style('opacity', 0.75);
 		
 	
-	var legendElement = this.chart.append('g')
+	var legendElement = this.svg.append('g')
 		.selectAll('.legendElement')
 		.data(legendItems)
 		.enter()
@@ -623,13 +631,13 @@ pisaChart.prototype.addLegend = function() {
 		.attr("text-anchor", "end");
 	
 	legendElement.append("rect")
-			.attr("x", that.width - (m.right + m.left + 10))
+			.attr("x", that.width - (m.left + 5))
 			.attr("width", 12)
 			.attr("height", 12)
 			.attr("fill", function(d) { return d.color = that.colorScale(d); });	
 	
 	legendElement.append("text")
-		.attr("x", that.width - (m.right + m.left + 15))
+		.attr("x", that.width - (m.left + 10))
 		.attr("y", 9.5)
 		.attr("dy", "0.15em")
 		.text(function(d) { return d; });

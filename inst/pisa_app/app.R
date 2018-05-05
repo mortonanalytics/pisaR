@@ -1,6 +1,8 @@
 library(shiny)
+library(shinyWidgets)
 library(dplyr)
 library(pisaR)
+
 # Define UI for application
 ui <- navbarPage(
   windowTitle = "WHO | PISA",
@@ -111,11 +113,16 @@ server <- function(input, output,session) {
   })
 
   output$week_filter <- renderUI({
-    numericInput("week_filter",
-                 "Select a Week in Flu Season",
-                 value = 1,
-                 min = 1,
-                 max = 52)
+    req(filter_data())
+    df <- filter_data()
+    weeks <- df$ISO_YW
+    weeks <- sort(weeks)
+    shinyWidgets::sliderTextInput(inputId =  "week_filter",
+                 label = "Select a Week in Flu Season",
+                 choices = weeks,
+                 selected = weeks[1],
+                 #to = weeks[length(weeks)],
+                 grid = FALSE)
   })
 
   filter_data <- reactive({
@@ -154,9 +161,7 @@ server <- function(input, output,session) {
         filter(!is.null(ISOYW))
     }
 
-    return(df_this)
   })
-
 
   ############# transmission ###################
   output$map_transmission <- renderPisaR({
@@ -166,7 +171,7 @@ server <- function(input, output,session) {
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "map",
                   layerData = filter_data() %>%
-                    filter(ISO_WEEK == input$week_filter) %>%
+                    filter(ISO_YW == input$week_filter) %>%
                     select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_CODE, ISO_YW),
                   layerMapping = list(color_var = "TRANSMISSION",
                                       time_var = "ISO_YW",
@@ -176,17 +181,23 @@ server <- function(input, output,session) {
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
 
   })
 
   output$heatmap_transmission <- renderPisaR({
+    if(!is.null(input$country_input)){
+      df_that <- filter_data() %>%
+        filter(COUNTRY_CODE == input$country_input)
+    } else {
+      df_that <- filter_data()
+    }
 
     pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
-                  layerData = filter_data() %>%
+                  layerData = df_that %>%
                     select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISO_YW, ISOYW) %>%
                     arrange(ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
@@ -215,16 +226,23 @@ server <- function(input, output,session) {
                                       key_map = "ISO_3_CODE")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
 
   })
 
   output$heatmap_seriousness <- renderPisaR({
+    if(!is.null(input$country_input)){
+      df_that <- filter_data() %>%
+        filter(COUNTRY_CODE == input$country_input)
+    } else {
+      df_that <- filter_data()
+    }
+
     pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
-                  layerData = filter_data()%>%
+                  layerData = df_that %>%
                     select(SERIOUSNESS, SERIOUSNESS_CL, SERIOUSNESS_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
                     arrange(ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
@@ -252,11 +270,18 @@ server <- function(input, output,session) {
                                       key_map = "ISO_3_CODE")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 0)
+      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
 
   })
 
   output$heatmap_impact <- renderPisaR({
+    if(!is.null(input$country_input)){
+      df_that <- filter_data() %>%
+        filter(COUNTRY_CODE == input$country_input)
+    } else {
+      df_that <- filter_data()
+    }
+
     pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
