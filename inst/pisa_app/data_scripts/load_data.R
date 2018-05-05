@@ -1,5 +1,34 @@
 df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
 
+##after the data is read, make sure the following column names are available - rename if necessary
+# df <- df %>%
+#   select(
+#     COUNTRY_CODE,
+#     COUNTRY_TITLE,
+#     ISO_YEAR,
+#     ISO_YW,
+#     ISOYW,
+#     FLU_SEASON,
+#     FLUREGION,
+#     WHOREGION,
+#     TRANSMISSION,
+#     TRANSMISSION_CL,
+#     TRANSMISSION_COM,
+#     SERIOUSNESS,
+#     SERIOUSNESS_CL,
+#     SERIOUSNESS_COM,
+#     IMPACT,
+#     IMPACT_CL,
+#     IMPACT_COM
+#   )
+
+## shorten US and UK names in data
+df$COUNTRY_TITLE <- gsub("^((\\w+\\W+){1}\\w+).*$","\\1", df$COUNTRY_TITLE)
+
+##impute iso2 code for United Kingdom
+df$ISO2 <- ifelse(df$COUNTRY_TITLE == "United Kingdom", "GB", df$ISO2)
+
+## create UI data
 year_ui <- sort(unique(df$ISO_YEAR[nchar(df$ISO_YEAR) == 4])) #Incorrect Year in data
 
 levels_ui <- c("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Reported") #inconsistent spellings in data

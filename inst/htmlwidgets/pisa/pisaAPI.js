@@ -80,6 +80,7 @@ pisaChart.prototype.routeLayers = function(lys){
 	lys.forEach(function(d){
 
 		var layerType = d.type;
+		var layerData = d.data;
 
 		if(layerType == "heatmap") {
 			that.addCells(d);
@@ -87,7 +88,7 @@ pisaChart.prototype.routeLayers = function(lys){
 			that.mapData(d);
 			that.makeMap(d);
 		} else  {
-			//alert("Wrong Layer Type!")
+			alert("Wrong Layer Type!")
 		}
 		
 	});
@@ -310,7 +311,7 @@ pisaChart.prototype.mapData = function(ly) {
 	var data = [];
 	//create nested JSON object for easier filtering
 	this.plotLayers.forEach(function(d){
-			console.log(d);
+			
 		var values = d3.nest()
 			.key(function(d) { return d[period]; })
 			.key(function(d) { return d[keyData]; })
@@ -341,6 +342,8 @@ pisaChart.prototype.makeMap = function(ly) {
 	var that = this;
 	var m = this.margin;
 	var active = d3.select(null);
+	
+	var scale = this.width > 700 ? 170 : 100 ;
 
 	var zoom = d3.zoom()
 		.scaleExtent([1, 8])
@@ -356,7 +359,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	//set projection
 	this.projection = d3.geoWagner7()
-		.scale(170)
+		.scale(scale)
 		.translate([
 			(this.width - (m.right+m.left)) / 2,
 			(this.height - (m.top + m.bottom)) / 2
@@ -407,8 +410,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		
 	var overlay_data = window.overlay_polygon[0].features;
 	
-	this.overlay_polygons = this.plot.append('g')
-		.attr('class', 'overlay-polygons')
+	this.overlay_polygons = this.chart.append('g')
 		.selectAll('.overlay-polygons')
 		.data(overlay_data);
 	
@@ -416,6 +418,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	var newOverlayPolygons = this.overlay_polygons.enter()
 		.append('path')
+		.attr('class', 'overlay-polygons')
 		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; });
@@ -426,8 +429,7 @@ pisaChart.prototype.makeMap = function(ly) {
 				
 	var overlay_line_data = window.overlay_line[0].features;
 	
-	this.overlays = this.plot.append('g')
-		.attr('class', 'overlay-lines')
+	this.overlays = this.chart.append('g')
 		.selectAll('.overlay-lines')
 		.data(overlay_line_data);
 	
@@ -435,6 +437,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	var newOverlayLines = this.overlays.enter()
 		.append('path')
+		.attr('class', 'overlay-lines')
 		.style('fill', 'none')
 		.style('stroke', 'gray')
 		.style('stroke-width', 0.5)
@@ -446,6 +449,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	this.addScaleLegend();
 	this.addLegend();
+	this.addDisclaimer();
 	
 	//functions
 	function clicked(d) {
@@ -460,7 +464,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		  y = (bounds[0][1] + bounds[1][1]) / 2,
 		  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / that.width, dy / that.height))),
 		  translate = [that.width / 2 - scale * x, that.height / 2 - scale * y];
-	  Shiny.onInputChange("country_input" ,d3.select(this).data()[0].properties.ISO_3_CODE);
+	  Shiny.onInputChange("country_input" ,d3.select(this).data()[0].properties.ISO_2_CODE);
 	  that.svg.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
@@ -615,7 +619,7 @@ pisaChart.prototype.addLegend = function() {
 		.attr("x", this.width - (m.right + m.left))
 		.attr('width', '100px')
 		.attr('height', (legendItems.length * 20) + 'px')
-		.style('fill', 'white')
+		.style('fill', 'none')
 		.style('opacity', 0.75);
 		
 	
@@ -644,6 +648,56 @@ pisaChart.prototype.addLegend = function() {
 	
 }
 
+pisaChart.prototype.addDisclaimer = function(){
+	
+	var disclaimer_text = {"text": "The boundaries and names shown and the designations used on this map do not imply the expression of any opinion whatsoever on the part of the World Health Organization concerning the legal status of any country, territory, city or area or of its authorities, or concerning the delimitation of its frontiers or boundaries. Dotted and dashed lines on maps represent approximate border lines for which there may not yet be full agreement."}
+
+	var disclaimer = this.svg.append('g')
+		.selectAll('.disclaimer-text')
+		.data([disclaimer_text]);
+		
+	disclaimer.exit().remove();
+	
+	disclaimer.enter()
+	  .append('g')
+		.attr('class', 'disclaimer')
+		.attr("font-family", "sans-serif")
+		.attr("font-size", 10)
+		.attr('x', this.margin.left)
+		.attr('y', this.height - this.margin.bottom)
+		.attr('height', this.margin.bottom)
+		.attr('width', this.width - (this.margin.right + this.margin.left) )
+	  .append('text')
+		.attr('class', 'disclaimer-text')
+		.attr('x', this.margin.left)
+		.attr('y', this.height - this.margin.bottom + 15)
+		.text(function(d) { return d.text; })
+		.call(wrap, (this.width / 2 ));
+		
+	function wrap(text, width) {
+	  text.each(function() {
+		var text = d3.select(this),
+			words = text.text().split(/\s+/).reverse(),
+			word,
+			line = [],
+			lineNumber = 0,
+			lineHeight = 1.1, // ems
+			y = text.attr("y"),
+			dy = parseFloat(text.attr("dy")),
+			tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+		while (word = words.pop()) {
+		  line.push(word);
+		  tspan.text(line.join(" "));
+		  if (tspan.node().getComputedTextLength() > width) {
+			line.pop();
+			tspan.text(line.join(" "));
+			line = [word];
+			tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+		  }
+		}
+	  });
+	}	
+}
 pisaChart.prototype.addTooltip = function(chartElement) {
 
 	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");

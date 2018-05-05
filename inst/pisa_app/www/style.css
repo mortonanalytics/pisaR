@@ -36,4 +36,12 @@ title */
 
 p {
 	color: gray;
+	font-size:10;
+}
+
+.irs-bar, .irs-bar-edge {
+	border: none;
+	border-top: none;
+	border-bottom: none;
+	background:none;
 }

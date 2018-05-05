@@ -22,22 +22,17 @@ ui <- navbarPage(
                         #uiOutput(outputId = "week_filter")
                         )
                         ),
-    tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
-    ),
+    # tags$head(
+    #   tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+    # ),
+    includeCSS("./www/style.css"),
 
     column(9, tabsetPanel(
       id = "explore",
       # Transmissability Tab
       tabPanel(title = "Transmissability",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
-               fluidRow(column(9,p("The boundaries and names shown and the designations used on this map do not imply
-                                   the expression of any opinion whatsoever on the part of the World Health
-                                   Organization concerning the legal status of any country, territory, city or area or of its
-                                   authorities, or concerning the delimitation of its frontiers or boundaries. Dotted and
-                                   dashed lines on maps represent approximate border lines for which there may not yet
-                                   be full agreement.")),
-                        column(2),
+               fluidRow(column(9),
                         column(1,HTML("&copy;", "WHO 2014"))),
                fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "750px"))
         ),
@@ -172,23 +167,24 @@ server <- function(input, output,session) {
                   layerLabel = "map",
                   layerData = filter_data() %>%
                     filter(ISO_YW == input$week_filter) %>%
-                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_CODE, ISO_YW),
+                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,ISO2, ISO_YW),
                   layerMapping = list(color_var = "TRANSMISSION",
                                       time_var = "ISO_YW",
-                                      key_data = "COUNTRY_CODE",
-                                      key_map = "ISO_3_CODE",
+                                      key_data = "ISO2",
+                                      key_map = "ISO_2_CODE",
                                       cl_var = "TRANSMISSION_CL",
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
 
   })
 
   output$heatmap_transmission <- renderPisaR({
+
     if(!is.null(input$country_input)){
       df_that <- filter_data() %>%
-        filter(COUNTRY_CODE == input$country_input)
+        filter(ISO2 == input$country_input)
     } else {
       df_that <- filter_data()
     }
@@ -207,7 +203,7 @@ server <- function(input, output,session) {
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 100)
+      definePlotMargin(left = 110)
 
   })
   ############# seriousness ###################
@@ -218,12 +214,14 @@ server <- function(input, output,session) {
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "map",
                   layerData = filter_data() %>%
-                    filter(ISO_WEEK == input$week_filter) %>%
+                    filter(ISO_YW == input$week_filter) %>%
                     select(SERIOUSNESS, SERIOUSNESS_CL, SERIOUSNESS_COM, COUNTRY_CODE, ISO_YW),
                   layerMapping = list(color_var = "SERIOUSNESS",
                                       time_var = "ISO_YW",
                                       key_data = "COUNTRY_CODE",
-                                      key_map = "ISO_3_CODE")) %>%
+                                      key_map = "ISO_3_CODE",
+                                      cl_var = "SERIOUSNESS_CL",
+                                      com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
@@ -233,7 +231,7 @@ server <- function(input, output,session) {
   output$heatmap_seriousness <- renderPisaR({
     if(!is.null(input$country_input)){
       df_that <- filter_data() %>%
-        filter(COUNTRY_CODE == input$country_input)
+        filter(ISO2 == input$country_input)
     } else {
       df_that <- filter_data()
     }
@@ -247,10 +245,12 @@ server <- function(input, output,session) {
                     arrange(ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
-                                      z_var = "SERIOUSNESS")) %>%
+                                      z_var = "SERIOUSNESS",
+                                      cl_var = "SERIOUSNESS_CL",
+                                      com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 100)
+      definePlotMargin(left = 110)
 
   })
 
@@ -262,12 +262,14 @@ server <- function(input, output,session) {
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "map",
                   layerData = filter_data() %>%
-                    filter(ISO_WEEK == input$week_filter) %>%
+                    filter(ISO_YW == input$week_filter) %>%
                     select(IMPACT, IMPACT_CL, IMPACT_COM,COUNTRY_CODE, ISO_YW),
                   layerMapping = list(color_var = "IMPACT",
                                       time_var = "ISO_YW",
                                       key_data = "COUNTRY_CODE",
-                                      key_map = "ISO_3_CODE")) %>%
+                                      key_map = "ISO_3_CODE",
+                                      cl_var = "IMPACT_CL",
+                                      com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
       definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
@@ -277,7 +279,7 @@ server <- function(input, output,session) {
   output$heatmap_impact <- renderPisaR({
     if(!is.null(input$country_input)){
       df_that <- filter_data() %>%
-        filter(COUNTRY_CODE == input$country_input)
+        filter(ISO2 == input$country_input)
     } else {
       df_that <- filter_data()
     }
@@ -286,15 +288,17 @@ server <- function(input, output,session) {
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "heat",
-                  layerData = filter_data()%>%
+                  layerData = df_that %>%
                     select(IMPACT, IMPACT_CL, IMPACT_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
                     arrange(ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
-                                      z_var = "IMPACT")) %>%
+                                      z_var = "IMPACT",
+                                      cl_var = "IMPACT_CL",
+                                      com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 100)
+      definePlotMargin(left = 110)
 
   })
 }
