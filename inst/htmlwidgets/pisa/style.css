@@ -27,9 +27,9 @@
 
 path.graticule {
   fill: none;
-  stroke: #aaa;
+  stroke: #E8E8E8;
   stroke-width: .5px;
-  opacity: .2;
+  background-color: AliceBlue;
 }
 
 .toolTip {

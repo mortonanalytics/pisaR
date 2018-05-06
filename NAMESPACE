@@ -3,6 +3,7 @@
 export(createLayer)
 export(defineColorScale)
 export(definePlotMargin)
+export(defineTimeInterval)
 export(pisaR)
 export(pisaROutput)
 export(renderPisaR)

@@ -8,7 +8,8 @@ ui <- navbarPage(
   windowTitle = "WHO | PISA",
   # Application title with links to WHO and PISA
   title = HTML('<span class="navtitle"><a rel="home" href="http://who.int" title="World Health Organization"><img class = "whoimg" src="who_logo_white40px.png"></a><a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page"><span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
-  tabPanel(title = "Home"),
+  tabPanel(title = "Home",
+           htmlOutput("home")),
   tabPanel(title = "Explore Data",
   fluidRow(
     column(3,
@@ -48,12 +49,22 @@ ui <- navbarPage(
     )
   )
   ),
-  tabPanel(title = "About"),
+  tabPanel(title = "About",
+           htmlOutput("about")),
   id = "title_bar"
 )
 
 # Define server logic
 server <- function(input, output,session) {
+
+  ## static home page
+  output$home <- renderText({
+    readLines(con = "./www/home.html")
+  })
+  ## static about page
+  output$about <- renderText({
+    readLines(con = "./www/about.html")
+  })
 
   ## load data into the app
   source("./data_scripts/load_data.R")
@@ -106,7 +117,7 @@ server <- function(input, output,session) {
   output$week_filter <- renderUI({
     req(filter_data())
     df <- filter_data()
-    weeks <- df$ISO_YW
+    weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
     shinyWidgets::sliderTextInput(inputId =  "week_filter",
                  label = "Select a Week in Flu Season",
@@ -179,12 +190,21 @@ server <- function(input, output,session) {
   output$heatmap_transmission <- renderPisaR({
 
     if(!is.null(input$country_input)){
-      df_that <- filter_data() %>%
-        filter(ISO2 == input$country_input)
+      if(input$country_input %in% filter_data()[["ISO2"]]){
+        df_that <- filter_data() %>%
+          filter(ISO2 == input$country_input)
+      } else {
+        df_that <- filter_data()
+      }
+
     } else {
       df_that <- filter_data()
     }
-
+    #define week interval
+    df <- filter_data()
+    weeks <- unique(df$ISO_YW)
+    weeks <- sort(weeks)
+    #draw chart
     pisaR() %>%
       createLayer(layerType = "heatmap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
@@ -199,7 +219,8 @@ server <- function(input, output,session) {
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 110)
+      definePlotMargin(left = 110) %>%
+      defineTimeInterval(interval = weeks)
 
   })
   ############# seriousness ###################
@@ -226,11 +247,20 @@ server <- function(input, output,session) {
 
   output$heatmap_seriousness <- renderPisaR({
     if(!is.null(input$country_input)){
-      df_that <- filter_data() %>%
-        filter(ISO2 == input$country_input)
+      if(input$country_input %in% filter_data()[["ISO2"]]){
+        df_that <- filter_data() %>%
+          filter(ISO2 == input$country_input)
+      } else {
+        df_that <- filter_data()
+      }
+
     } else {
       df_that <- filter_data()
     }
+    #define week interval
+    df <- filter_data()
+    weeks <- unique(df$ISO_YW)
+    weeks <- sort(weeks)
 
     pisaR() %>%
       createLayer(layerType = "heatmap",
@@ -246,7 +276,8 @@ server <- function(input, output,session) {
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 110)
+      definePlotMargin(left = 110) %>%
+      defineTimeInterval(interval = weeks)
 
   })
 
@@ -274,11 +305,20 @@ server <- function(input, output,session) {
 
   output$heatmap_impact <- renderPisaR({
     if(!is.null(input$country_input)){
-      df_that <- filter_data() %>%
-        filter(ISO2 == input$country_input)
+      if(input$country_input %in% filter_data()[["ISO2"]]){
+        df_that <- filter_data() %>%
+          filter(ISO2 == input$country_input)
+      } else {
+        df_that <- filter_data()
+      }
+
     } else {
       df_that <- filter_data()
     }
+    #define week interval
+    df <- filter_data()
+    weeks <- unique(df$ISO_YW)
+    weeks <- sort(weeks)
 
     pisaR() %>%
       createLayer(layerType = "heatmap",
@@ -294,7 +334,8 @@ server <- function(input, output,session) {
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(left = 110)
+      definePlotMargin(left = 110) %>%
+      defineTimeInterval(interval = weeks)
 
   })
 }

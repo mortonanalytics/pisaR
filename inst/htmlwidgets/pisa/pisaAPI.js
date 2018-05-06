@@ -53,7 +53,7 @@ pisaChart.prototype.initialize = function(chartElement){
 	
 	//set clip path
 	if(this.options.plotType == "globalMap")this.setClipPath(chartElement);
-	this.processScales(this.plotLayers);
+	this.processScales(this.plotLayers, this.options);
 	if(this.options.plotType != "globalMap")this.addAxes();
 	this.routeLayers(this.plotLayers, chartElement);
 	//this.addTooltip(chartElement);
@@ -94,7 +94,7 @@ pisaChart.prototype.routeLayers = function(lys, chartElement){
 	});
 }
 
-pisaChart.prototype.processScales = function(lys) {
+pisaChart.prototype.processScales = function(lys,options) {
 	var m = this.margin;
 	
 	var x_extents = [];
@@ -119,11 +119,12 @@ pisaChart.prototype.processScales = function(lys) {
 		colors.push(color);
 		
 	})
-
+	console.log(options.timeInterval);	
 	//create scales
+	var x_domain = options.timeInterval ?  options.timeInterval : x_extents[0]
 	this.xScale = d3.scaleBand()
-		.rangeRound([ 0, Math.min((this.width - (m.right + m.left)), (x_extents[0].length * 40) ) ])
-		.domain(x_extents[0]);
+		.rangeRound([ 0, Math.min((this.width - (m.right + m.left)), (x_domain.length * 40) ) ])
+		.domain(x_domain);
 
 	this.yScale =  d3.scaleBand()
 		//.padding(0.2)
@@ -145,7 +146,7 @@ pisaChart.prototype.addAxes = function(){
 	this.xAxis = d3.axisTop()
 			.scale(this.xScale);
 			//.tickValues(this.xScale.domain().filter(function(d, i) { return !(i % 2); }));
-	
+	//x axis
 	this.plot.append('g')
 		.attr("class", "x axis")
 		.call(this.xAxis)
@@ -154,7 +155,10 @@ pisaChart.prototype.addAxes = function(){
 				.attr('dx', '.35em')
 				.attr("transform", "rotate(-45)")
 				.attr('text-anchor', 'start');
+	//reduce ticks for smaller screens
+	if(this.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 	
+	//y axis
 	this.plot.append('g')
 		.attr("class", "y axis")
 		.call(d3.axisLeft(this.yScale))
@@ -180,6 +184,7 @@ pisaChart.prototype.updateAxes = function() {
 				.attr('dx', '.35em')
 				.attr("transform", "rotate(-45)")
 				.attr('text-anchor', 'start');
+	if(this.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 	
 	this.svg.selectAll('.y.axis')
 		.transition().ease(d3.easeQuad)
@@ -228,6 +233,13 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', this.options.borderWidth)
 		.style('fill', 'lightgray')
+		.on('mouseover', function(d) {
+			select_axis_label(d).attr('style', "font-weight: bold;");
+		})
+		.on('mouseout', function(d) {
+			select_axis_label(d).attr('style', "font-weight: regular;");
+			if(that.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
+		});
 	
 	newCells
 		.append('svg:title')
@@ -254,6 +266,12 @@ pisaChart.prototype.addCells = function(ly) {
 		;
 		
 	this.addGrid();
+	
+	function select_axis_label(datum) {
+		return d3.selectAll('.axis.x')
+			.selectAll('text')
+			.filter(function(x) { return x == datum[ly.x_var]; });
+	}
 }
 
 pisaChart.prototype.addGrid = function(){
@@ -475,7 +493,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		  dy = bounds[1][1] - bounds[0][1],
 		  x = (bounds[0][0] + bounds[1][0]) / 2,
 		  y = (bounds[0][1] + bounds[1][1]) / 2,
-		  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / that.width, dy / that.height))),
+		  scale = Math.max(1, Math.min(8, 0.5 / Math.max(dx / that.width, dy / that.height))),
 		  translate = [that.width / 2 - scale * x, that.height / 2 - scale * y];
 	  Shiny.onInputChange("country_input" ,d3.select(this).data()[0].properties.ISO_2_CODE);
 	  that.chart.transition()
@@ -648,13 +666,13 @@ pisaChart.prototype.addLegend = function() {
 		.attr("text-anchor", "end");
 	
 	legendElement.append("rect")
-			.attr("x", that.width - (m.left + 5))
+			.attr("x", that.width - (m.left + 10))
 			.attr("width", 12)
 			.attr("height", 12)
 			.attr("fill", function(d) { return d.color = that.colorScale(d); });	
 	
 	legendElement.append("text")
-		.attr("x", that.width - (m.left + 10))
+		.attr("x", that.width - (m.left + 15))
 		.attr("y", 9.5)
 		.attr("dy", "0.15em")
 		.text(function(d) { return d; });
@@ -683,7 +701,7 @@ pisaChart.prototype.addDisclaimer = function(chartElement){
 		.attr('height', this.margin.bottom)
 		.attr('width', this.width - (this.margin.right + this.margin.left) )
 	  .append('text')
-		.attr('class', 'disclaimer-text')
+		.attr('class', 'disclaimer-text-words')
 		.attr('x', this.margin.left)
 		.attr('y', this.height - this.margin.bottom + 15)
 		.attr('dy', 0)
@@ -721,10 +739,6 @@ pisaChart.prototype.addDisclaimer = function(chartElement){
 	  });
 	}	
 }
-pisaChart.prototype.addTooltip = function(chartElement) {
-
-	this.tooltip = d3.select(chartElement).append("div").attr("class", "toolTip");
-}
 
 pisaChart.prototype.update = function(x){
 	
@@ -738,6 +752,7 @@ pisaChart.prototype.update = function(x){
 	this.chart.selectAll('.x-gridLine').remove();
 	this.chart.selectAll('.y-gridLine').remove();
 	this.chart.selectAll('graticule').remove();
+	this.svg.selectAll('.disclaimer-text').remove();
 
 	//layer comparison to identify layers no longer needed
 	this.plotLayers = x.layers;
@@ -762,13 +777,10 @@ pisaChart.prototype.update = function(x){
 		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	
 	//update all the other stuff
-	this.processScales(this.plotLayers);
-	//this.updateClipPath(this.element);
+	this.processScales(this.plotLayers, x.options);
 	this.updateAxes();
 	this.routeLayers(this.plotLayers, this.element);
-	//this.updateLegend();
-	//this.updateToolTip(this.element);
-	//this.removeLayers(oldLayers);
+
 	
 }
 
