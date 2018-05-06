@@ -32,20 +32,16 @@ ui <- navbarPage(
       # Transmissability Tab
       tabPanel(title = "Transmissability",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
-               fluidRow(column(9),
-                        column(1,HTML("&copy;", "WHO 2014"))),
                fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "750px"))
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
                fluidRow(pisaROutput("map_seriousness", width = "100%", height = "450px")),
-               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
                fluidRow(pisaROutput("heatmap_seriousness", width = "100%", height = "750px"))
                ),
       # Impact Tab
       tabPanel(title = "Impact",
                fluidRow(pisaROutput("map_impact", width = "100%", height = "450px")),
-               fluidRow(column(9,p("The WHO Disclaimer: need text"))),
                fluidRow(pisaROutput("heatmap_impact", width = "100%", height = "750px"))
                )
       )
@@ -224,7 +220,7 @@ server <- function(input, output,session) {
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
 
   })
 
@@ -272,7 +268,7 @@ server <- function(input, output,session) {
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 0, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
 
   })
 

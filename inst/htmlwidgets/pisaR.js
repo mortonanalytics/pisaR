@@ -26,7 +26,21 @@ HTMLWidgets.widget({
 					});
 			}
 		}
-
+		if(HTMLWidgets.shinyMode){
+			var that = this;
+			// redraw on {.tabset} tab visibility changed
+			  var tab = $(el).closest('div.tab-pane');
+			  if (tab !== null) {
+				var tabID = tab.attr('id');
+				var tabAnchor = $('a[data-toggle="tab"][href="#' + tabID + '"]');
+				if (tabAnchor !== null) {
+				  tabAnchor.on('shown.bs.tab', function() {
+					if (that.chart)
+					  that.chart.resize();  
+				  });
+				}
+			  }
+		}
       },
 
       resize: function(width, height) {

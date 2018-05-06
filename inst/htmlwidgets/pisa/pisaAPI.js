@@ -55,8 +55,8 @@ pisaChart.prototype.initialize = function(chartElement){
 	if(this.options.plotType == "globalMap")this.setClipPath(chartElement);
 	this.processScales(this.plotLayers);
 	if(this.options.plotType != "globalMap")this.addAxes();
-	this.routeLayers(this.plotLayers);
-	this.addTooltip(chartElement);
+	this.routeLayers(this.plotLayers, chartElement);
+	//this.addTooltip(chartElement);
 }
 
 pisaChart.prototype.setClipPath = function(chartElement){
@@ -69,10 +69,10 @@ pisaChart.prototype.setClipPath = function(chartElement){
 		.attr('width', this.width - (this.margin.left + this.margin.right))
 		.attr('height', this.height - (this.margin.top + this.margin.bottom));
 		
-	this.chart.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+	this.plot.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 }
 
-pisaChart.prototype.routeLayers = function(lys){
+pisaChart.prototype.routeLayers = function(lys, chartElement){
 	var that = this;
 
 	this.layerIndex = lys.map(function(d) {return d.label; });
@@ -86,7 +86,7 @@ pisaChart.prototype.routeLayers = function(lys){
 			that.addCells(d);
 		} else if(d.type == "globalMap"){
 			that.mapData(d);
-			that.makeMap(d);
+			that.makeMap(d, chartElement);
 		} else  {
 			alert("Wrong Layer Type!")
 		}
@@ -338,12 +338,12 @@ pisaChart.prototype.mapData = function(ly) {
 	
 }
 
-pisaChart.prototype.makeMap = function(ly) {
+pisaChart.prototype.makeMap = function(ly, chartElement) {
 	var that = this;
 	var m = this.margin;
 	var active = d3.select(null);
-	
-	var scale = this.width > 700 ? 170 : 100 ;
+
+	var scale = this.width > 700 ? 120 : 80 ;
 
 	var zoom = d3.zoom()
 		.scaleExtent([1, 8])
@@ -354,7 +354,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		.attr('class', 'map-background')
 		.attr('width',this.width - (m.right+m.left))
 		.attr('height', this.height - (m.top + m.bottom))
-		.style('fill', 'AliceBlue')
+		.style('fill', 'none')
 		.on('click', reset);
 	
 	//set projection
@@ -372,6 +372,16 @@ pisaChart.prototype.makeMap = function(ly) {
 
 	var data = dataMap.features;
 	
+	//create map graticulate
+	var graticule = d3.geoGraticule();
+	this.chart
+		.append('path')
+		.datum(graticule)
+		.attr('class', 'graticule')
+		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+		.attr('d', this.path)
+		.on('click', reset);
+	
 	//create map polygons
 	this.polygons = this.chart.append('g')
 		.attr('class', 'map-shapes')
@@ -382,6 +392,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	var newPolygons = this.polygons.enter()
 		.append('path')
 		.attr('class', 'map-shapes')
+		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('fill', 'whitesmoke')
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
@@ -405,7 +416,7 @@ pisaChart.prototype.makeMap = function(ly) {
 		.transition()
 		.duration(1000)
 		.attr('d', this.path)
-		.style('opacity', 0.8)
+		//.style('opacity', 0.8)
 		.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";});
 		
 	var overlay_data = window.overlay_polygon[0].features;
@@ -419,6 +430,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	var newOverlayPolygons = this.overlay_polygons.enter()
 		.append('path')
 		.attr('class', 'overlay-polygons')
+		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; });
@@ -438,6 +450,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	var newOverlayLines = this.overlays.enter()
 		.append('path')
 		.attr('class', 'overlay-lines')
+		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('fill', 'none')
 		.style('stroke', 'gray')
 		.style('stroke-width', 0.5)
@@ -449,7 +462,7 @@ pisaChart.prototype.makeMap = function(ly) {
 	
 	this.addScaleLegend();
 	this.addLegend();
-	this.addDisclaimer();
+	this.addDisclaimer(chartElement);
 	
 	//functions
 	function clicked(d) {
@@ -465,21 +478,21 @@ pisaChart.prototype.makeMap = function(ly) {
 		  scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / that.width, dy / that.height))),
 		  translate = [that.width / 2 - scale * x, that.height / 2 - scale * y];
 	  Shiny.onInputChange("country_input" ,d3.select(this).data()[0].properties.ISO_2_CODE);
-	  that.svg.transition()
+	  that.chart.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity.translate(translate[0],translate[1]).scale(scale) ); // updated for d3 v4
 	}
 	
 	function zoomed() {
-	  that.plot.style("stroke-width", 1.5 / d3.event.transform.k + "px");
-	  that.plot.attr("transform", d3.event.transform); // updated for d3 v4
+	  that.chart.style("stroke-width", 1.5 / d3.event.transform.k + "px");
+	  that.chart.attr("transform", d3.event.transform); // updated for d3 v4
 	}
 
 	function reset() {
 	  active.classed("active", false);
 	  active = d3.select(null);
 	  Shiny.onInputChange("country_input" , null)
-	  that.svg.transition()
+	  that.chart.transition()
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
 	}
@@ -648,11 +661,13 @@ pisaChart.prototype.addLegend = function() {
 	
 }
 
-pisaChart.prototype.addDisclaimer = function(){
+pisaChart.prototype.addDisclaimer = function(chartElement){
 	
+	var width = this.width / 2;
 	var disclaimer_text = {"text": "The boundaries and names shown and the designations used on this map do not imply the expression of any opinion whatsoever on the part of the World Health Organization concerning the legal status of any country, territory, city or area or of its authorities, or concerning the delimitation of its frontiers or boundaries. Dotted and dashed lines on maps represent approximate border lines for which there may not yet be full agreement."}
 
-	var disclaimer = this.svg.append('g')
+	var disclaimer = d3.select('#' + chartElement.id).select('svg')
+		.append('g')
 		.selectAll('.disclaimer-text')
 		.data([disclaimer_text]);
 		
@@ -660,7 +675,7 @@ pisaChart.prototype.addDisclaimer = function(){
 	
 	disclaimer.enter()
 	  .append('g')
-		.attr('class', 'disclaimer')
+		.attr('class', 'disclaimer-text')
 		.attr("font-family", "sans-serif")
 		.attr("font-size", 10)
 		.attr('x', this.margin.left)
@@ -671,10 +686,18 @@ pisaChart.prototype.addDisclaimer = function(){
 		.attr('class', 'disclaimer-text')
 		.attr('x', this.margin.left)
 		.attr('y', this.height - this.margin.bottom + 15)
+		.attr('dy', 0)
+		.attr('height', this.margin.bottom)
 		.text(function(d) { return d.text; })
-		.call(wrap, (this.width / 2 ));
+		.call(wrap);
 		
-	function wrap(text, width) {
+	this.svg
+		.append('text')
+		.attr('x', this.width - this.margin.right)
+		.attr('y', this.height - this.margin.bottom +15)
+		.text('\u00A9 WHO 2018');
+		
+	function wrap(text) {
 	  text.each(function() {
 		var text = d3.select(this),
 			words = text.text().split(/\s+/).reverse(),
@@ -714,6 +737,7 @@ pisaChart.prototype.update = function(x){
 	//erase grids on redraw
 	this.chart.selectAll('.x-gridLine').remove();
 	this.chart.selectAll('.y-gridLine').remove();
+	this.chart.selectAll('graticule').remove();
 
 	//layer comparison to identify layers no longer needed
 	this.plotLayers = x.layers;
@@ -741,7 +765,7 @@ pisaChart.prototype.update = function(x){
 	this.processScales(this.plotLayers);
 	//this.updateClipPath(this.element);
 	this.updateAxes();
-	this.routeLayers(this.plotLayers);
+	this.routeLayers(this.plotLayers, this.element);
 	//this.updateLegend();
 	//this.updateToolTip(this.element);
 	//this.removeLayers(oldLayers);

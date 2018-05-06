@@ -25,6 +25,13 @@
  display: none; 
 }
 
+path.graticule {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: .5px;
+  opacity: .2;
+}
+
 .toolTip {
   pointer-events: none;
   position: absolute;
