@@ -2,8 +2,6 @@
 #'
 #' Widget for creating PISA application pieces
 #'
-#' @import htmlwidgets
-#'
 #' @export
 #'
 #' @param data (optional) A data frame or tibble
