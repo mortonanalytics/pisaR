@@ -11,6 +11,14 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(pisaR)
+df <- readRDS("./www/data.Rds")
+df_heat <- df %>% 
+  filter(ISO_YEAR =="2017")
+df_map <- df_heat %>%
+  filter(ISOYW == "201701")
 ```
 
 ## Introduction
@@ -38,6 +46,45 @@ Data-driven UI means that the data is used to render the UI as much as possible.
 ### API CSS
 
 ## `pisaR` R Library
+
+### Global Map Example
+
+```{r global_map_1, output.width = 9}
+pisaR(width = "100%", height = "400px")%>%
+      createLayer(layerType = "globalMap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "map",
+                  layerData = df_map %>%
+                    #filter(ISO_YW == input$week_filter) %>%
+                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,ISO2, ISO_YW),
+                  layerMapping = list(color_var = "TRANSMISSION",
+                                      time_var = "ISO_YW",
+                                      key_data = "ISO2",
+                                      key_map = "ISO_2_CODE",
+                                      cl_var = "TRANSMISSION_CL",
+                                      com_var = "TRANSMISSION_COM")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
+```
+
+### Heat Map Example
+
+```{r heat_map_1}
+  pisaR(width = "100%", height = "700px") %>%
+    createLayer(layerType = "heatmap",
+                layerColor = list("green","yellow", "orange", "red", "darkred"),
+                layerLabel = "heat",
+                layerData = df_heat %>%
+                  select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISOYW) %>%
+                  arrange(ISOYW),
+                layerMapping = list(x_var = 'ISOYW',
+                                    y_var = 'COUNTRY_TITLE',
+                                    z_var = "TRANSMISSION")) %>%
+    defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                     color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
+    definePlotMargin(left = 110)
+```
 
 ### R Functions
 
