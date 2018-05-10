@@ -119,7 +119,7 @@ server <- function(input, output,session) {
     df <- filter_data()
     weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
-    shinyWidgets::sliderTextInput(inputId =  "week_filter",
+    sliderTextInput(inputId =  "week_filter",
                  label = "Select a Week in Flu Season",
                  choices = weeks,
                  selected = weeks[1],

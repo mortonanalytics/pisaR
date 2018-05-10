@@ -16,3 +16,15 @@ dependencies:
   version: 2.0
   src: htmlwidgets/pisa
   script: ./d3-geo-projection.js
+- name: saveSvgAsPng
+  version: 0.0.1
+  src: htmlwidgets/lib
+  script: ./saveSvgAsPng.js
+- name: canvg
+  version: 0.0.1
+  src: htmlwidgets/lib
+  script: ./canvg.js
+- name: rgbcolor
+  version: 0.0.1
+  src: htmlwidgets/lib
+  script: ./rgbcolor.js

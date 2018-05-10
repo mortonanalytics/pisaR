@@ -1,0 +1,56 @@
+---
+title: "PISA Technical Guide"
+author: "Ryan Morton, Morton Analytics"
+date: "May 9, 2018"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PISA Technical Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This guided intends to describe the PISA app and its underlying software. When appropriate, this guide instructs technical staff in the maintenance and additions to the application and underlying software.
+
+This guide starts with an overview of the design philosophy and workflow. It then proceeds to the underlying software supporting the app and finishes with the app itself.
+
+**If you're reading this guide to debug or make changes, please consider whether the issue relates to the plots in the browser (probably `pisaAPI.js`), the UI in the browser(probably `shiny` or `shinyWidget`), or the server (definitately R/Shiny).**
+
+## Design Philosophy
+
+The design incorporates two basic ideas: data-driven UI and "everything updates."
+
+Data-driven UI means that the data is used to render the UI as much as possible.  While this generally ensures UI options are available for any data available, it also means that errors in the data can cause errors downstream.  In the case of the measure levels and confidence levels, the categories were coded into the UI due to unpredictable errors and different spellings in the data.  Otherwise, you can count on updates in the data to drive updates in the app without changing the app.
+
+"Everything updates" means that all content updates in response to the data. This is expressed most completely with the `pisaAPI.js` where different data elements cause updates to the plots rather than erasing the plot and drawing again.  In particular, since the plots utilize SVG graphics, the API really just manipulates the DOM rather than replace the image. So a `path` tag gets updated by moving, changing color, changing opacity, or whatever else.
+
+## Workflow
+
+## JavaScript Library`pisaAPI.js`
+
+### API Architecture
+
+### API CSS
+
+## `pisaR` R Library
+
+### R Functions
+
+### Installed Elements
+
+### Adding Functions
+
+## `pisa_app` Shiny Application
+
+### Shiny UI
+
+### Shiny Server
+
+### Data Scripts
+
+### App Resources

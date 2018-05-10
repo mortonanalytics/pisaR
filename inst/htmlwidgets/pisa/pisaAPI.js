@@ -26,7 +26,7 @@ pisaChart.prototype.draw = function(chartElement) {
 	//if(this.plotLayers[0].type == "heatmap") {d3.select(chartElement).style('overflow-y', 'auto');}
 	
 	this.svg = d3.select(chartElement).append('svg')
-		.attr('id', chartElement.id + '-svg')
+		.attr('id', chartElement.id + '-svg-chart')
 		.attr('width', this.width)
 		.attr('height', this.height);
 	
@@ -35,16 +35,11 @@ pisaChart.prototype.draw = function(chartElement) {
 		.attr('transform','translate('+this.margin.left+','+this.margin.top+')');
 	
 	this.chart = this.plot.append('g');
-	
-	this.context = this.svg.append('g')
-			.attr('class', 'context')
-			.attr('height', 10)
-			.attr('width', this.width- (this.margin.right + this.margin.left))
-			.attr('transform', "translate(" + this.margin.left + "," + 0 + ")");
 			
 	//initialize chart
 	this.initialize(chartElement);
 	
+		
 }
 
 pisaChart.prototype.initialize = function(chartElement){
@@ -56,7 +51,7 @@ pisaChart.prototype.initialize = function(chartElement){
 	this.processScales(this.plotLayers, this.options);
 	if(this.options.plotType != "globalMap")this.addAxes();
 	this.routeLayers(this.plotLayers, chartElement);
-	//this.addTooltip(chartElement);
+	//this.addButtons(chartElement);
 }
 
 pisaChart.prototype.setClipPath = function(chartElement){
@@ -83,7 +78,7 @@ pisaChart.prototype.routeLayers = function(lys, chartElement){
 		var layerData = d.data;
 
 		if(layerType == "heatmap") {
-			that.addCells(d);
+			that.addCells(d, chartElement);
 		} else if(d.type == "globalMap"){
 			that.mapData(d);
 			that.makeMap(d, chartElement);
@@ -194,7 +189,7 @@ pisaChart.prototype.updateAxes = function() {
 				.attr("dx", "-.25em");
 }
 
-pisaChart.prototype.addCells = function(ly) {
+pisaChart.prototype.addCells = function(ly, chartElement) {
 		
 	var that = this;
 	var m = this.margin;
@@ -228,6 +223,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.attr('x', function (d) {return that.xScale(d[ly.x_var]); })
 		.attr('y', function (d) {return that.yScale(d[ly.y_var]); })
 		.attr('class', 'heatCell')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip' + ')')
 		.attr('width',this.xScale.bandwidth())
 		.attr('height', this.yScale.bandwidth())
 		.style('stroke', 'whitesmoke')
@@ -265,7 +261,7 @@ pisaChart.prototype.addCells = function(ly) {
 		.style('fill', function(d) {return that.colorScale(d[ly.z_var]); })
 		;
 		
-	this.addGrid();
+	this.addGrid(chartElement);
 	
 	function select_axis_label(datum) {
 		return d3.selectAll('.axis.x')
@@ -274,7 +270,7 @@ pisaChart.prototype.addCells = function(ly) {
 	}
 }
 
-pisaChart.prototype.addGrid = function(){
+pisaChart.prototype.addGrid = function(chartElement){
 	
 	var that = this;
 	var m = this.margin;
@@ -291,6 +287,7 @@ pisaChart.prototype.addGrid = function(){
 	x_grid.enter()	
 		.append('line')
 		.attr('class', 'x-gridLine')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip' + ')')
 		.attr('x1', function(d) { return that.xScale(d); })
 		.attr('x2', function(d) { return that.xScale(d); })
 		.attr('y1', y_range.length * that.yScale.bandwidth() )
@@ -396,7 +393,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		.append('path')
 		.datum(graticule)
 		.attr('class', 'graticule')
-		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.attr('d', this.path)
 		.on('click', reset);
 	
@@ -410,7 +407,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	var newPolygons = this.polygons.enter()
 		.append('path')
 		.attr('class', 'map-shapes')
-		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('fill', 'whitesmoke')
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
@@ -448,7 +445,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	var newOverlayPolygons = this.overlay_polygons.enter()
 		.append('path')
 		.attr('class', 'overlay-polygons')
-		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
 		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; });
@@ -468,7 +465,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	var newOverlayLines = this.overlays.enter()
 		.append('path')
 		.attr('class', 'overlay-lines')
-		//.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
+		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('fill', 'none')
 		.style('stroke', 'gray')
 		.style('stroke-width', 0.5)
@@ -740,6 +737,32 @@ pisaChart.prototype.addDisclaimer = function(chartElement){
 	}	
 }
 
+pisaChart.prototype.addButtons = function(chartElement){
+	
+	var save_png = this.svg
+		.append('g')
+		.attr('class', 'button')
+		.attr('transform', 'translate(15,0)')
+		.on("click", function(){		
+			var svg = document.getElementById(chartElement.id + '-svg-chart');
+			saveSvgAsPng(svg, chartElement.id + ".png", { canvg: canvg, backgroundColor: 'white'});
+		})
+	
+	save_png.append('rect')
+		.attr('width', 35)
+		.attr('height', 15)
+		.attr('rx', 4)
+		.attr('ry', 4)
+		.style('fill', 'lightsteelblue');
+		
+	save_png.append('text')
+		.attr('x', 1)
+		.attr('y', 7.5)
+		.attr('dy', '.35em')
+		.style('fill', 'white')
+		.text("PNG");
+}
+
 pisaChart.prototype.update = function(x){
 	
 	var that = this;
@@ -787,4 +810,3 @@ pisaChart.prototype.update = function(x){
 pisaChart.prototype.resize = function(){
 	this.draw(this.element)
 }
-
