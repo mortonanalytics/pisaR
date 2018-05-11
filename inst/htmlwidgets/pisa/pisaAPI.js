@@ -151,7 +151,7 @@ pisaChart.prototype.addAxes = function(){
 				.attr("transform", "rotate(-45)")
 				.attr('text-anchor', 'start');
 	//reduce ticks for smaller screens
-	if(this.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
+	if(this.width < 700 | this.xScale.domain().length > 52) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 	
 	//y axis
 	this.plot.append('g')
@@ -179,7 +179,7 @@ pisaChart.prototype.updateAxes = function() {
 				.attr('dx', '.35em')
 				.attr("transform", "rotate(-45)")
 				.attr('text-anchor', 'start');
-	if(this.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
+	if(this.width < 700 | this.xScale.domain().length > 52) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 	
 	this.svg.selectAll('.y.axis')
 		.transition().ease(d3.easeQuad)
@@ -210,24 +210,24 @@ pisaChart.prototype.addCells = function(ly, chartElement) {
 	var gridSize = Math.floor((this.width - (m.right + m.left))/32);
 	
 	//grey background
-	var heat_background = this.chart
-		.selectAll('.heat-background')
-		.data([1]);
+	// var heat_background = this.chart
+		// .selectAll('.heat-background')
+		// .data([1]);
 	
-	heat_background.exit().remove();
+	// heat_background.exit().remove();
 	
-	var new_heat_background=heat_background
-		.enter()
-		.append('rect')
-		.attr('class', 'heat-background');
+	// var new_heat_background=heat_background
+		// .enter()
+		// .append('rect')
+		// .attr('class', 'heat-background');
 		
-	heat_background
-		.merge(new_heat_background)
-		.attr('transform','translate(5 ,0)')
-		.attr('width', Math.min((this.width - (m.right + m.left)), (this.xScale.domain().length * 40)) - 10)
-		.attr('height', this.yScale.domain().length * 40)
-		.style('stroke', 'whitesmoke')
-		.style('fill', '#DCDCDC');
+	// heat_background
+		// .merge(new_heat_background)
+		// .attr('transform','translate(5 ,0)')
+		// .attr('width', Math.min((this.width - (m.right + m.left)), (this.xScale.domain().length * 40)) - 10)
+		// .attr('height', this.yScale.domain().length * 40)
+		// .style('stroke', 'whitesmoke')
+		// .style('fill', '#DCDCDC');
 	
 	//create cells
 	var cells = this.chart.selectAll('.heatCell')
@@ -251,22 +251,22 @@ pisaChart.prototype.addCells = function(ly, chartElement) {
 		.style('stroke-width', this.options.borderWidth)
 		.style('fill', 'lightgray')
 		.on('mouseover', function(d) {
-			select_axis_label(d).attr('style', "font-weight: bold;").attr('style', "fill: black;");
+			select_axis_label(d).attr('style', "font-weight: bold; fill: black;");
 		})
 		.on('mouseout', function(d) {
 			select_axis_label(d).attr('style', "font-weight: regular;").attr('style', "fill: darkgrey;");
-			if(that.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
+			if(that.width < 700 | that.xScale.domain().length > 52) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 		});
 	
 	newCells
 		.append('svg:title')
 		.append(function(d){
 			var span = document.createElement("span");
-			span.innerHTML = ly.y_var + ": " + d[ly.y_var] +
-			"<br/> " + ly.x_var + ": " + d[ly.x_var] +
+			span.innerHTML = "Country: " + d[ly.y_var] +
+			"<br/> " + "Year-Week: " + d[ly.x_var] +
 			"<br/> " + ly.z_var + ": " + d[ly.z_var] +
-			"<br/> " + ly.cl_var + ": " + d[ly.cl_var] +
-			"<br/> " + ly.com_var + ": " + d[ly.com_var] ;
+			"<br/> Confidence Level: " + d[ly.cl_var] +
+			"<br/> Comments: " + d[ly.com_var] ;
 			
 			return span
 		});	
@@ -340,7 +340,9 @@ pisaChart.prototype.mapData = function(ly) {
 	var keyData = ly.layerMapping.key_data;
 	var keyMap = ly.layerMapping.key_map;
 	var period = ly.layerMapping.time_var;
+	this.period = period;
 	var value = ly.layerMapping.color_var;
+	this.value = value;
 	var cl_var = ly.layerMapping.cl_var;
 	var com_var = ly.layerMapping.com_var;
 	
@@ -443,7 +445,8 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 			
 			var span = document.createElement("span");
 			span.innerHTML = "Country: "  + d.properties.CNTRY_TERR +
-			"<br/> " + "Value: " + (d.values ? d.values.value : "Unreported") +
+			"<br/> " + that.value + ": " + (d.values ? d.values.value : "Unreported") +
+			"<br/> " + "Year-Week: " + that.period +
 			"<br/> Confidence Level: " + (d.values ? d.values.cl : "Unreported") +
 			"<br/> Comments: "  + (d.values ? d.values.com : "Unreported");
 			
@@ -693,16 +696,16 @@ pisaChart.prototype.addLegend = function() {
 		.attr("transform", function(d,i) { return "translate(0," +  i * 20 + ")"; })
 		.attr("font-family", "sans-serif")
 		.attr("font-size", 10)
-		.attr("text-anchor", "end");
+		.attr("text-anchor", "start");
 	
 	legendElement.append("rect")
-			.attr("x", that.width - (m.left + 10))
+			.attr("x", that.width - (m.right + 30))
 			.attr("width", 12)
 			.attr("height", 12)
 			.attr("fill", function(d) { return d.color = that.colorScale(d); });	
 	
 	legendElement.append("text")
-		.attr("x", that.width - (m.left + 15))
+		.attr("x", that.width - (m.right + 15))
 		.attr("y", 9.5)
 		.attr("dy", "0.15em")
 		.text(function(d) { return d; });
@@ -732,17 +735,33 @@ pisaChart.prototype.addDisclaimer = function(chartElement){
 		.attr('width', this.width - (this.margin.right + this.margin.left) )
 	  .append('text')
 		.attr('class', 'disclaimer-text-words')
-		.attr('x', this.margin.left)
+		.attr('x', this.margin.left+5)
 		.attr('y', this.height - this.margin.bottom + 15)
 		.attr('dy', 0)
 		.attr('height', this.margin.bottom)
 		.text(function(d) { return d.text; })
 		.call(wrap);
+	this.svg.selectAll('.disclaimer-text')
+	  .append('text')
+		.attr('class', 'disclaimer-text-words')
+		.attr('x', this.width - (.4 * this.width))
+		.attr('y', this.height - this.margin.bottom + 15)
+		.attr('dy', 0)
+		.attr('height', this.margin.bottom)
+		.text('Data source: World Health Organization');
+	this.svg.selectAll('.disclaimer-text')
+	  .append('text')
+		.attr('class', 'disclaimer-text-words')
+		.attr('x', this.width - (.4 * this.width))
+		.attr('y', this.height - this.margin.bottom + 30)
+		.attr('dy', 0)
+		.attr('height', this.margin.bottom)
+		.text('Map production: Global Influenza Programme, World Health Organization');
 		
 	this.svg
 		.append('text')
 		.attr('x', this.width - this.margin.right)
-		.attr('y', this.height - this.margin.bottom +15)
+		.attr('y', this.height - 15)
 		.text('\u00A9 WHO 2018');
 		
 	function wrap(text) {

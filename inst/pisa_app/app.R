@@ -14,11 +14,14 @@ ui <- navbarPage(
   fluidRow(
     column(3,
            sidebarPanel(width = 12,
-                        uiOutput(outputId = "season_filter"),
-                        uiOutput(outputId = "season_date_filter"),
-                        uiOutput(outputId = "week_filter"),
+                        h3("Data Filters"),
                         uiOutput(outputId = "level_filter"),
                         uiOutput(outputId = "confidence_level_filter"),
+                        fluidRow(column(6,uiOutput(outputId = "season_start")),
+                        column(6,uiOutput(outputId = "season_end"))),
+                        h3("Map Only"),
+                        uiOutput(outputId = "week_filter"),
+                        h3("Heat map Only"),
                         uiOutput(outputId = "region_filter")
                         #uiOutput(outputId = "week_filter")
                         )
@@ -97,21 +100,12 @@ server <- function(input, output,session) {
                 inline = TRUE)
   })
 
-  output$season_filter <- renderUI({
-    selectInput("season_filter",
-                "Select a Season",
-                choices = season_ui,
-                selected = "Both")
+  output$season_start <- renderUI({
+    textInput("season_start", "Season Start", value = paste0(max(year_ui), "-01"))
   })
 
-  output$season_date_filter <- renderUI({
-    req(input$season_filter)
-    season_dates <- season_calendar_ui$dates[season_calendar_ui$season == ifelse(input$season_filter == "South", "South",
-                                                                                 ifelse(input$season_filter == "North", "North", "Both"))]
-    selectInput("season_date_filter",
-                "Select the Flu Season",
-                choices = season_dates,
-                selected = max(season_dates))
+  output$season_end <- renderUI({
+    textInput("season_end", "Season End", value = paste0(max(year_ui), "-52"))
   })
 
   output$week_filter <- renderUI({
@@ -128,12 +122,10 @@ server <- function(input, output,session) {
   })
 
   filter_data <- reactive({
-    req(input$season_date_filter)
+    req(input$season_start)
     ##season filter breakdown
-    dates <- c(unlist(strsplit(input$season_date_filter, split = " ")))
-    dates <- gsub("-", "", dates)
-    start <- dates[1]
-    end <- dates[3]
+    start <- gsub("-", "",input$season_start)
+    end <- gsub("-", "",input$season_end)
 
     # season and region filtered table
     # level and confidence level depends on which tab (id = explore) is active
@@ -182,8 +174,8 @@ server <- function(input, output,session) {
                                       cl_var = "TRANSMISSION_CL",
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100) %>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
@@ -219,7 +211,7 @@ server <- function(input, output,session) {
                                       cl_var = "TRANSMISSION_CL",
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
       definePlotMargin(left = 110) %>%
       defineTimeInterval(interval = weeks)
 
@@ -241,8 +233,8 @@ server <- function(input, output,session) {
                                       cl_var = "SERIOUSNESS_CL",
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)%>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100)%>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
@@ -277,7 +269,7 @@ server <- function(input, output,session) {
                                       cl_var = "SERIOUSNESS_CL",
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
       definePlotMargin(left = 110) %>%
       defineTimeInterval(interval = weeks)
 
@@ -300,8 +292,8 @@ server <- function(input, output,session) {
                                       cl_var = "IMPACT_CL",
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)%>%
+                       color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100)%>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
@@ -336,7 +328,7 @@ server <- function(input, output,session) {
                                       cl_var = "IMPACT_CL",
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
+                       color_key = list("below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
       definePlotMargin(left = 110) %>%
       defineTimeInterval(interval = weeks)
 

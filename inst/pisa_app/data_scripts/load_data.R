@@ -28,12 +28,25 @@ df$COUNTRY_TITLE <- gsub("^((\\w+\\W+){1}\\w+).*$","\\1", df$COUNTRY_TITLE)
 ##impute iso2 code for United Kingdom
 df$ISO2 <- ifelse(df$COUNTRY_TITLE == "United Kingdom", "GB", df$ISO2)
 
+## impute Not Reported for all measures
+df$TRANSMISSION <- gsub("NULL", "Not Available", df$TRANSMISSION)
+df$TRANSMISSION_CL <- gsub("NULL", "Not Available", df$TRANSMISSION_CL)
+df$TRANSMISSION_COM <- gsub("NULL", "Not Available", df$TRANSMISSION_COM)
+
+df$SERIOUSNESS <- gsub("NULL", "Not Available", df$SERIOUSNESS)
+df$SERIOUSNESS_CL <- gsub("NULL", "Not Available", df$SERIOUSNESS_CL)
+df$SERIOUSNESS_COM <- gsub("NULL", "Not Available", df$SERIOUSNESS_COM)
+
+df$IMPACT <- gsub("NULL", "Not Available", df$IMPACT)
+df$IMPACT_CL <- gsub("NULL", "Not Available", df$IMPACT_CL)
+df$IMPACT_COM <- gsub("NULL", "Not Available", df$IMPACT_COM)
+
 ## create UI data
 year_ui <- sort(unique(df$ISO_YEAR[nchar(df$ISO_YEAR) == 4])) #Incorrect Year in data
 
-levels_ui <- c("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Reported") #inconsistent spellings in data
+levels_ui <- c("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available") #inconsistent spellings in data
 
-confidence_ui <- c("Low", "Medium", "High", "Not Reported") # insconsistent spellings in data
+confidence_ui <- c("Low", "Medium", "High", "Not Available") # insconsistent spellings in data
 
 who_region_ui <- unique(df$WHOREGION[nchar(df$WHOREGION) == 3])
 
