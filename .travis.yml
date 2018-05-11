@@ -4,12 +4,22 @@ language: R
 sudo: false
 cache: packages
 
+branches:
+  only:
+   - master
+
 sources:
     - r-packages-precise
     packages:
     - r-base-dev	
     - r-recommended
     - pandoc
+
+    
+# cache local R libraries directory:
+cache:
+  directories:
+    - ~/Rlib
 
 install:
   - mkdir -p ~/Rlib
@@ -31,4 +41,14 @@ r_packages:
     - dplyr
     - htmlwidgets
     - shiny
-    -shinyWidgets
+    - shinyWidgets
+    
+# report coverage rate to coveralls
+after_success:
+  - Rscript -e 'covr::coveralls(exclusions = "src/RcppExports.cpp")'
+
+# send e-mails if stuff changes
+notifications:
+  email:
+    on_success: change
+    on_failure: change
