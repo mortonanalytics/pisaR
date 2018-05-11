@@ -30,8 +30,8 @@ ui <- navbarPage(
 
     column(9, tabsetPanel(
       id = "explore",
-      # Transmissability Tab
-      tabPanel(title = "Transmissability",
+      # Transmissibility Tab
+      tabPanel(title = "Transmissibility",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
                fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "750px"))
         ),
@@ -137,7 +137,7 @@ server <- function(input, output,session) {
 
     # season and region filtered table
     # level and confidence level depends on which tab (id = explore) is active
-    if(input$explore == "Transmissability"){
+    if(input$explore == "Transmissibility"){
       df_this <- df %>%
         filter(ISOYW >= start) %>%
         filter(ISOYW <= end) %>%
@@ -183,7 +183,8 @@ server <- function(input, output,session) {
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100) %>%
+      assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
 
@@ -201,7 +202,7 @@ server <- function(input, output,session) {
       df_that <- filter_data()
     }
     #define week interval
-    df <- filter_data()
+    df <- df_that
     weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
     #draw chart
@@ -241,7 +242,8 @@ server <- function(input, output,session) {
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)%>%
+      assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
 
@@ -258,7 +260,7 @@ server <- function(input, output,session) {
       df_that <- filter_data()
     }
     #define week interval
-    df <- filter_data()
+    df <- df_that
     weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
 
@@ -299,7 +301,8 @@ server <- function(input, output,session) {
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not available", "Not applicable")) %>%
-      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)
+      definePlotMargin(top = 0, left = 0, bottom = 100, right = 100)%>%
+      assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
 
@@ -316,7 +319,7 @@ server <- function(input, output,session) {
       df_that <- filter_data()
     }
     #define week interval
-    df <- filter_data()
+    df <- df_that
     weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
 

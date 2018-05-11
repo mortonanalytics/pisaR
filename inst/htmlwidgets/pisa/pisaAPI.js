@@ -7,7 +7,6 @@ var pisaChart = function(opts) {
 	this.element = opts.element;
 	this.plotLayers = opts.plotLayers;
 	this.options = opts.options;
-	//console.log(this.plotLayers);
 	
 	//create the chart 
 	//widget calls the update function if chart already exists
@@ -15,6 +14,7 @@ var pisaChart = function(opts) {
 }
 
 pisaChart.prototype.draw = function(chartElement) {
+	console.log(this.options);
 	var user_margins = this.options.margins;
 	//define dimensions
 	this.width = chartElement.offsetWidth-30;
@@ -209,6 +209,27 @@ pisaChart.prototype.addCells = function(ly, chartElement) {
 	
 	var gridSize = Math.floor((this.width - (m.right + m.left))/32);
 	
+	//grey background
+	var heat_background = this.chart
+		.selectAll('.heat-background')
+		.data([1]);
+	
+	heat_background.exit().remove();
+	
+	var new_heat_background=heat_background
+		.enter()
+		.append('rect')
+		.attr('class', 'heat-background');
+		
+	heat_background
+		.merge(new_heat_background)
+		.attr('transform','translate(5 ,0)')
+		.attr('width', Math.min((this.width - (m.right + m.left)), (this.xScale.domain().length * 40)) - 10)
+		.attr('height', this.yScale.domain().length * 40)
+		.style('stroke', 'whitesmoke')
+		.style('fill', '#DCDCDC');
+	
+	//create cells
 	var cells = this.chart.selectAll('.heatCell')
 		.data(data);
 	
@@ -230,10 +251,10 @@ pisaChart.prototype.addCells = function(ly, chartElement) {
 		.style('stroke-width', this.options.borderWidth)
 		.style('fill', 'lightgray')
 		.on('mouseover', function(d) {
-			select_axis_label(d).attr('style', "font-weight: bold;");
+			select_axis_label(d).attr('style', "font-weight: bold;").attr('style', "fill: black;");
 		})
 		.on('mouseout', function(d) {
-			select_axis_label(d).attr('style', "font-weight: regular;");
+			select_axis_label(d).attr('style', "font-weight: regular;").attr('style', "fill: darkgrey;");
 			if(that.width < 700) d3.selectAll(".x.axis text").style("display", function (d, i) { return i % 2 ? "none" : "initial" });
 		});
 	
@@ -354,6 +375,7 @@ pisaChart.prototype.mapData = function(ly) {
 }
 
 pisaChart.prototype.makeMap = function(ly, chartElement) {
+	
 	var that = this;
 	var m = this.margin;
 	var active = d3.select(null);
@@ -407,8 +429,9 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	var newPolygons = this.polygons.enter()
 		.append('path')
 		.attr('class', 'map-shapes')
+		.attr('id', function(d) { return d.properties.ISO_2_CODE})
 		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
-		.style('fill', 'whitesmoke')
+		.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";})
 		.style('stroke', 'whitesmoke')
 		.style('stroke-width', 0.5)
 		.attr('d', that.path)
@@ -430,9 +453,9 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	this.polygons.merge(newPolygons)
 		.transition()
 		.duration(1000)
-		.attr('d', this.path)
+		.attr('d', this.path);
 		//.style('opacity', 0.8)
-		.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";});
+		//.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";});
 		
 	var overlay_data = window.overlay_polygon[0].features;
 	
@@ -447,8 +470,8 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		.attr('class', 'overlay-polygons')
 		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('stroke-width', 0.5)
-		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'gray'; })
-		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'AliceBlue' : 'whitesmoke'; });
+		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'white' : 'gray'; })
+		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'white' : 'whitesmoke'; });
 		
 	this.overlay_polygons
 		.merge(newOverlayPolygons)
@@ -474,7 +497,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 	this.overlays
 		.merge(newOverlayLines)
 		.attr('d', this.path);
-	
+	this.assignMapColor();
 	this.addScaleLegend();
 	this.addLegend();
 	this.addDisclaimer(chartElement);
@@ -511,6 +534,16 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		  .duration(750)
 		  .call( zoom.transform, d3.zoomIdentity ); // updated for d3 v4
 	}
+	
+}
+
+pisaChart.prototype.assignMapColor = function(){
+	
+	var that = this;
+	
+	this.options.mapColor.country.forEach(function(d){
+		that.chart.select('#' + d).style('fill', that.options.mapColor.color)
+	})
 	
 }
 
@@ -804,7 +837,6 @@ pisaChart.prototype.update = function(x){
 	this.updateAxes();
 	this.routeLayers(this.plotLayers, this.element);
 
-	
 }
 
 pisaChart.prototype.resize = function(){

@@ -15,17 +15,12 @@ HTMLWidgets.widget({
 		// var chartType = x.options.chartType;
 
         // general chart with layers
-		if(x.layers) {
-			if(this.chart){
-				this.chart.update(x);
-			} else {
-				this.chart = new pisaChart({
-					element: document.getElementById(el.id),
-					plotLayers: x.layers,
-					options: x.options
-					});
-			}
-		}
+		this.chart = new pisaChart({
+			element: document.getElementById(el.id),
+			plotLayers: x.layers,
+			options: x.options
+			});
+			
 		if(HTMLWidgets.shinyMode){
 			var that = this;
 			// redraw on {.tabset} tab visibility changed
