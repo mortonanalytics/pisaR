@@ -3,6 +3,7 @@
 #' Widget for creating PISA application pieces
 #'
 #' @import htmlwidgets
+#'
 #' @import dplyr
 #'
 #' @export

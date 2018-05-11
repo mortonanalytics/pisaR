@@ -1,7 +1,7 @@
-library(shiny)
-library(shinyWidgets)
-library(dplyr)
-library(pisaR)
+require(shiny)
+require(shinyWidgets)
+require(dplyr)
+require(pisaR)
 
 # Define UI for application
 ui <- navbarPage(
