@@ -11,8 +11,8 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-library(tidyr)
+require(dplyr)
+require(tidyr)
 library(pisaR)
 df <- readRDS("./www/data.Rds")
 df_heat <- df %>% 
