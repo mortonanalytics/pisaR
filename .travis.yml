@@ -15,6 +15,9 @@ r_packages:
   - covr
   - dplyr
   - tidyr
+  - knitr
+
+r_build_args: "--no-build-vignettes"
 
 r_github_packages:
   - rstudio/shinytest
