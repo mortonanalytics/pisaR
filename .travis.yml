@@ -1,56 +1,33 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
-language: R
+language: r
+
 sudo: false
-cache: packages
 
-branches:
-  only:
-   - master
-
-sources:
-    - r-packages-precise
-    packages:
-    - r-base-dev	
-    - r-recommended
-    - pandoc
-
-    
-# cache local R libraries directory:
 cache:
+  packages: true
   directories:
-    - ~/Rlib
+    - travis_phantomjs
 
-install:
-  - mkdir -p ~/Rlib
-  - echo 'R_LIBS=~/Rlib' > .Renviron
-  - echo 'options(repos = "http://cran.rstudio.com")' > .Rprofile
-  - echo '.travis.yml' > .Rbuildignore
-  - Rscript -e 'if(!"devtools" %in% rownames(installed.packages())) { install.packages("devtools", dependencies = TRUE) }'
-  - Rscript -e 'if(!"dplyr" %in% rownames(installed.packages())) { install.packages("dplyr", dependencies = TRUE) }'
-  - Rscript -e 'if(!"htmlwidgets" %in% rownames(installed.packages())) { install.packages("htmlwidgets", dependencies = TRUE) }'
-  - Rscript -e 'if(!"pisaR" %in% rownames(installed.packages())) { devtools::install_github("mortonanalytics/pisaR") }'
-  - Rscript -e 'update.packages(ask = FALSE, instlib = "~/Rlib")'
-  - Rscript -e 'devtools::install_deps(pkg = ".", dependencies = TRUE)'
-
-# Build and check package
-script:
-  - R CMD build . --no-build-vignettes --no-manual
-  - PKG_FILE_NAME=$(ls -1t *.tar.gz | head -n 1)
-  - R CMD check "${PKG_FILE_NAME}" --no-build-vignettes --no-manual --as-cran
+warnings_are_errors: true
 
 r_packages:
-    - dplyr
-    - htmlwidgets
-    - shiny
-    - shinyWidgets
-    
-# report coverage rate to coveralls
-after_success:
-  - Rscript -e 'covr::coveralls(exclusions = "src/RcppExports.cpp")'
+  - covr
 
-# send e-mails if stuff changes
-notifications:
-  email:
-    on_success: change
-    on_failure: change
+r_github_packages:
+  - rstudio/shinytest
+
+before_install:
+  - "export PHANTOMJS_VERSION=2.1.1"
+  - "phantomjs --version"
+  - "export PATH=$PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64/bin:$PATH"
+  - "hash -r"
+  - "phantomjs --version"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then wget https://github.com/Medium/phantomjs/releases/download/v$PHANTOMJS_VERSION/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2; fi"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-$PHANTOMJS_VERSION-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
+  - "if [ $(phantomjs --version) != $PHANTOMJS_VERSION ]; then hash -r; fi"
+  - "phantomjs --version"
+
+after_success:
+  - Rscript -e 'covr::codecov()'
