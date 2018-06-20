@@ -1,4 +1,43 @@
-df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
+require(jsonlite)
+require(httr)
+
+## id the years based on current date
+year_current <- as.numeric(format(Sys.Date(), "%Y"))
+year_prev <- year_current - 1
+
+## load credentials from environment
+username <- "preview"
+password <- "preview"
+
+## call web service
+call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
+               year_current,
+               "&format=json&profile=pisa")
+
+get_data <- GET(call, authenticate(username, password, type = "basic"))
+
+get_text <- content(get_data, "text")
+get_text <- gsub("is \"moderate\"", "is moderate", get_text)
+get_text <- gsub("is \"low\"", "is low", get_text)
+
+get_json <- fromJSON(get_text)
+
+df <- get_json
+
+call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
+               year_prev,
+               "&format=json&profile=pisa")
+get_data <- GET(call, authenticate(username, password, type = "basic"))
+
+get_text <- content(get_data, "text")
+get_text <- gsub("is \"moderate\"", "is moderate", get_text)
+get_text <- gsub("is \"low\"", "is low", get_text)
+
+get_json <- fromJSON(get_text)
+
+df <- rbind(df, get_json)
+
+#df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
 
 ##after the data is read, make sure the following column names are available - rename if necessary
 # df <- df %>%
@@ -21,6 +60,10 @@ df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
 #     IMPACT_CL,
 #     IMPACT_COM
 #   )
+
+# remove text from dates
+df$ISOYW <- gsub("Week ", "", df$ISOYW)
+df$ISO_YW <- gsub("Week ", "", df$ISO_YW)
 
 ## shorten US and UK names in data
 df$COUNTRY_TITLE <- gsub("^((\\w+\\W+){1}\\w+).*$","\\1", df$COUNTRY_TITLE)

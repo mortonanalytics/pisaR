@@ -9,7 +9,7 @@ ui <- navbarPage(
   # Application title with links to WHO and PISA
   title = HTML('<span class="navtitle"><a rel="home" href="http://who.int" title="World Health Organization"><img class = "whoimg" src="who_logo_white40px.png"></a><a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page"><span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
   tabPanel(title = "Home",
-           htmlOutput("home")),
+           HTML(readLines("./www/home_page.html"))),
   tabPanel(title = "Explore Data",
   fluidRow(
     column(3,
@@ -60,10 +60,6 @@ ui <- navbarPage(
 # Define server logic
 server <- function(input, output,session) {
 
-  ## static home page
-  output$home <- renderText({
-    readLines(con = "./www/home.html")
-  })
   ## static about page
   output$about <- renderText({
     readLines(con = "./www/about.html")
