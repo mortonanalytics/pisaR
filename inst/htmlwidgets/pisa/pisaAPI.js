@@ -461,7 +461,7 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		//.style('fill', function(d) {return d.values ? that.colorScale(d.values.value) : "lightgray";});
 		
 	var overlay_data = window.overlay_polygon[0].features;
-	
+	console.log(overlay_data);
 	this.overlay_polygons = this.chart.append('g')
 		.selectAll('.overlay-polygons')
 		.data(overlay_data);
@@ -474,14 +474,15 @@ pisaChart.prototype.makeMap = function(ly, chartElement) {
 		.attr('clip-path', 'url(#' + chartElement.id + 'clip'+ ')')
 		.style('stroke-width', 0.5)
 		.style('fill', function(d) { return d.properties.AREA == 'Lakes' ? 'white' : 'gray'; })
-		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'white' : 'whitesmoke'; });
+		.style('stroke', function(d) { return d.properties.AREA == 'Lakes' ? 'white' : 'white'; })
+		.style('stroke-dasharray', function(d) { return d.properties.AREA == 'Lakes'? 'none' : '1,1'});
 		
 	this.overlay_polygons
 		.merge(newOverlayPolygons)
 		.attr('d', this.path);
 				
 	var overlay_line_data = window.overlay_line[0].features;
-	
+	console.log(overlay_line_data);
 	this.overlays = this.chart.append('g')
 		.selectAll('.overlay-lines')
 		.data(overlay_line_data);

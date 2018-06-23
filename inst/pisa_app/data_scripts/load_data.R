@@ -4,6 +4,7 @@ require(httr)
 ## id the years based on current date
 year_current <- as.numeric(format(Sys.Date(), "%Y"))
 year_prev <- year_current - 1
+year_prev_2 <- year_current -2
 
 ## load credentials from environment
 username <- "preview"
@@ -17,8 +18,8 @@ call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,
 get_data <- GET(call, authenticate(username, password, type = "basic"))
 
 get_text <- content(get_data, "text")
-get_text <- gsub("is \"moderate\"", "is moderate", get_text)
-get_text <- gsub("is \"low\"", "is low", get_text)
+#get_text <- gsub("is \"moderate\"", "is moderate", get_text)
+#get_text <- gsub("is \"low\"", "is low", get_text)
 
 get_json <- fromJSON(get_text)
 
@@ -30,36 +31,25 @@ call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,
 get_data <- GET(call, authenticate(username, password, type = "basic"))
 
 get_text <- content(get_data, "text")
-get_text <- gsub("is \"moderate\"", "is moderate", get_text)
-get_text <- gsub("is \"low\"", "is low", get_text)
+#get_text <- gsub("is \"moderate\"", "is moderate", get_text)
+#get_text <- gsub("is \"low\"", "is low", get_text)
 
 get_json <- fromJSON(get_text)
 
 df <- rbind(df, get_json)
 
-#df <- read.csv("./data/data_v3.csv", stringsAsFactors = FALSE)
-
-##after the data is read, make sure the following column names are available - rename if necessary
-# df <- df %>%
-#   select(
-#     COUNTRY_CODE,
-#     COUNTRY_TITLE,
-#     ISO_YEAR,
-#     ISO_YW,
-#     ISOYW,
-#     FLU_SEASON,
-#     FLUREGION,
-#     WHOREGION,
-#     TRANSMISSION,
-#     TRANSMISSION_CL,
-#     TRANSMISSION_COM,
-#     SERIOUSNESS,
-#     SERIOUSNESS_CL,
-#     SERIOUSNESS_COM,
-#     IMPACT,
-#     IMPACT_CL,
-#     IMPACT_COM
-#   )
+# call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
+#                year_prev_2,
+#                "&format=json&profile=pisa")
+# get_data <- GET(call, authenticate(username, password, type = "basic"))
+#
+# get_text <- content(get_data, "text")
+# #get_text <- gsub("is \"moderate\"", "is moderate", get_text)
+# #get_text <- gsub("is \"low\"", "is low", get_text)
+#
+# get_json <- fromJSON(get_text)
+#
+# df <- rbind(df, get_json)
 
 # remove text from dates
 df$ISOYW <- gsub("Week ", "", df$ISOYW)
@@ -72,17 +62,17 @@ df$COUNTRY_TITLE <- gsub("^((\\w+\\W+){1}\\w+).*$","\\1", df$COUNTRY_TITLE)
 df$ISO2 <- ifelse(df$COUNTRY_TITLE == "United Kingdom", "GB", df$ISO2)
 
 ## impute Not Reported for all measures
-df$TRANSMISSION <- gsub("NULL", "Not Available", df$TRANSMISSION)
-df$TRANSMISSION_CL <- gsub("NULL", "Not Available", df$TRANSMISSION_CL)
-df$TRANSMISSION_COM <- gsub("NULL", "Not Available", df$TRANSMISSION_COM)
+df$TRANSMISSION[nchar(df$TRANSMISSION) == 0] <- "Not Available"
+df$TRANSMISSION_CL[nchar(df$TRANSMISSION_CL) == 0] <- "Not Available"
+df$TRANSMISSION_COM[nchar(df$TRANSMISSION_COM) == 0] <- "Not Available"
 
-df$SERIOUSNESS <- gsub("NULL", "Not Available", df$SERIOUSNESS)
-df$SERIOUSNESS_CL <- gsub("NULL", "Not Available", df$SERIOUSNESS_CL)
-df$SERIOUSNESS_COM <- gsub("NULL", "Not Available", df$SERIOUSNESS_COM)
+df$SERIOUSNESS[nchar(df$SERIOUSNESS) == 0] <- "Not Available"
+df$SERIOUSNESS_CL[nchar(df$SERIOUSNESS_CL) == 0] <- "Not Available"
+df$SERIOUSNESS_COM[nchar(df$SERIOUSNESS_COM) == 0] <- "Not Available"
 
-df$IMPACT <- gsub("NULL", "Not Available", df$IMPACT)
-df$IMPACT_CL <- gsub("NULL", "Not Available", df$IMPACT_CL)
-df$IMPACT_COM <- gsub("NULL", "Not Available", df$IMPACT_COM)
+df$IMPACT[nchar(df$IMPACT) == 0] <- "Not Available"
+df$IMPACT_CL[nchar(df$IMPACT_CL) == 0] <- "Not Available"
+df$IMPACT_COM[nchar(df$IMPACT_COM) == 0] <- "Not Available"
 
 ## create UI data
 year_ui <- sort(unique(df$ISO_YEAR[nchar(df$ISO_YEAR) == 4])) #Incorrect Year in data

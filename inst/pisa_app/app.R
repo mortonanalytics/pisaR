@@ -3,6 +3,9 @@ require(shinyWidgets)
 require(dplyr)
 require(pisaR)
 
+## load data into the app
+source("./data_scripts/load_data.R")
+
 # Define UI for application
 ui <- navbarPage(
   windowTitle = "WHO | PISA",
@@ -36,36 +39,37 @@ ui <- navbarPage(
       # Transmissibility Tab
       tabPanel(title = "Transmissibility",
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
-               fluidRow(pisaROutput("heatmap_transmission", width = "100%", height = "750px"))
+               fluidRow(pisaROutput("heatmap_transmission",
+                                    width = "100%",
+                                    height = paste0(length(unique(df$COUNTRY_TITLE))*40, "px")))
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
                fluidRow(pisaROutput("map_seriousness", width = "100%", height = "450px")),
-               fluidRow(pisaROutput("heatmap_seriousness", width = "100%", height = "750px"))
+               fluidRow(pisaROutput("heatmap_seriousness",
+                                    width = "100%",
+                                    height = paste0(length(unique(df$COUNTRY_TITLE))*40, "px")))
                ),
       # Impact Tab
       tabPanel(title = "Impact",
                fluidRow(pisaROutput("map_impact", width = "100%", height = "450px")),
-               fluidRow(pisaROutput("heatmap_impact", width = "100%", height = "750px"))
+               fluidRow(pisaROutput("heatmap_impact",
+                                    width = "100%",
+                                    height = paste0(length(unique(df$COUNTRY_TITLE))*40, "px")))
                )
       )
     )
   )
   ),
   tabPanel(title = "About",
-           htmlOutput("about")),
+           HTML(readLines("./www/about_page.html"))),
   id = "title_bar"
 )
 
 # Define server logic
 server <- function(input, output,session) {
 
-  ## static about page
-  output$about <- renderText({
-    readLines(con = "./www/about.html")
-  })
-
-  ## load data into the app
+    ## load data into the app
   source("./data_scripts/load_data.R")
 
   ## render UI elements using data available
@@ -200,7 +204,7 @@ server <- function(input, output,session) {
                   layerLabel = "heat",
                   layerData = df_that %>%
                     select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISO_YW, ISOYW) %>%
-                    arrange(ISOYW),
+                    arrange(desc(COUNTRY_TITLE), ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "TRANSMISSION",
@@ -258,7 +262,7 @@ server <- function(input, output,session) {
                   layerLabel = "heat",
                   layerData = df_that %>%
                     select(SERIOUSNESS, SERIOUSNESS_CL, SERIOUSNESS_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
-                    arrange(ISOYW),
+                    arrange(desc(COUNTRY_TITLE),ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "SERIOUSNESS",
@@ -317,7 +321,7 @@ server <- function(input, output,session) {
                   layerLabel = "heat",
                   layerData = df_that %>%
                     select(IMPACT, IMPACT_CL, IMPACT_COM,COUNTRY_TITLE, ISOYW, ISO_YW) %>%
-                    arrange(ISOYW),
+                    arrange(desc(COUNTRY_TITLE),ISOYW),
                   layerMapping = list(x_var = 'ISO_YW',
                                       y_var = 'COUNTRY_TITLE',
                                       z_var = "IMPACT",
