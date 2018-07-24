@@ -101,11 +101,11 @@ server <- function(input, output,session) {
   })
 
   output$season_start <- renderUI({
-    textInput("season_start", "Season Start", value = paste0(max(year_ui), "-01"))
+    textInput("season_start", "Start (YEAR-WEEK)", value = paste0(max(year_ui), "-01"))
   })
 
   output$season_end <- renderUI({
-    textInput("season_end", "Season End", value = paste0(max(year_ui), "-52"))
+    textInput("season_end", "End", value = paste0(max(year_ui), "-52"))
   })
 
   output$week_filter <- renderUI({
@@ -114,7 +114,7 @@ server <- function(input, output,session) {
     weeks <- unique(df$ISO_YW)
     weeks <- sort(weeks)
     sliderTextInput(inputId =  "week_filter",
-                 label = "Select a Week in Flu Season",
+                 label = "Select a Year and Week",
                  choices = weeks,
                  selected = weeks[1],
                  #to = weeks[length(weeks)],
