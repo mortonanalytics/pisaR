@@ -5,4 +5,4 @@
 
 Pandemic Influenza Severity Assessment (PISA) Tool for The World Health Organization
 
-This repository holds the application, htmlwidget, and documentation for the PISA tool.
+This repository holds the application (under the inst folder), htmlwidget, and documentation for the PISA tool.
