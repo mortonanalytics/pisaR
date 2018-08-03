@@ -1,5 +1,5 @@
-require(jsonlite)
-require(httr)
+library(jsonlite)
+library(httr)
 
 ## id the years based on current date
 year_current <- as.numeric(format(Sys.Date(), "%Y"))
@@ -10,7 +10,7 @@ year_prev_2 <- year_current -2
 username <- "preview"
 password <- "preview"
 
-## call web service
+## call web service for current year
 call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
                year_current,
                "&format=json&profile=pisa")
@@ -18,34 +18,30 @@ call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,
 get_data <- GET(call, authenticate(username, password, type = "basic"))
 
 get_text <- content(get_data, "text")
-#get_text <- gsub("is \"moderate\"", "is moderate", get_text)
-#get_text <- gsub("is \"low\"", "is low", get_text)
 
 get_json <- fromJSON(get_text)
 
 df <- get_json
 
+## call web service for previous year
 call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
                year_prev,
                "&format=json&profile=pisa")
 get_data <- GET(call, authenticate(username, password, type = "basic"))
 
 get_text <- content(get_data, "text")
-#get_text <- gsub("is \"moderate\"", "is moderate", get_text)
-#get_text <- gsub("is \"low\"", "is low", get_text)
 
 get_json <- fromJSON(get_text)
 
 df <- rbind(df, get_json)
 
+## call web service for two years prior
 # call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",
 #                year_prev_2,
 #                "&format=json&profile=pisa")
 # get_data <- GET(call, authenticate(username, password, type = "basic"))
 #
 # get_text <- content(get_data, "text")
-# #get_text <- gsub("is \"moderate\"", "is moderate", get_text)
-# #get_text <- gsub("is \"low\"", "is low", get_text)
 #
 # get_json <- fromJSON(get_text)
 #
@@ -77,7 +73,7 @@ df$IMPACT_COM[nchar(df$IMPACT_COM) == 0] <- "Not Available"
 ## create UI data
 year_ui <- sort(unique(df$ISO_YEAR[nchar(df$ISO_YEAR) == 4])) #Incorrect Year in data
 
-levels_ui <- c("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available") #inconsistent spellings in data
+levels_ui <- c("Below seasonal threshold", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "No Impact") #inconsistent spellings in data
 
 confidence_ui <- c("Low", "Medium", "High", "Not Available") # insconsistent spellings in data
 

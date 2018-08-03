@@ -1,7 +1,7 @@
-require(shiny)
-require(shinyWidgets)
-require(dplyr)
-require(pisaR)
+library(shiny)
+library(shinyWidgets)
+library(dplyr)
+library(pisaR)
 
 ## load data into the app
 source("./data_scripts/load_data.R")
@@ -79,7 +79,7 @@ server <- function(input, output,session) {
 
   output$level_filter <- renderUI({
     checkboxGroupInput("level_filter",
-                "Select Level",
+                "Select Level of Activity",
                 choices = levels_ui,
                 selected = levels_ui,
                 inline = FALSE)
@@ -105,7 +105,7 @@ server <- function(input, output,session) {
   })
 
   output$season_end <- renderUI({
-    textInput("season_end", "End", value = paste0(max(year_ui), "-52"))
+    textInput("season_end", "End (YEAR-WEEK)", value = paste0(max(year_ui), "-52"))
   })
 
   output$week_filter <- renderUI({
@@ -174,8 +174,8 @@ server <- function(input, output,session) {
                                       cl_var = "TRANSMISSION_CL",
                                       com_var = "TRANSMISSION_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
-      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100) %>%
+                       color_key = list("Below seasonal threshold", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 150) %>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
@@ -234,7 +234,7 @@ server <- function(input, output,session) {
                                       com_var = "SERIOUSNESS_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
-      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100)%>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 150)%>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
@@ -293,7 +293,7 @@ server <- function(input, output,session) {
                                       com_var = "IMPACT_COM")) %>%
       defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
                        color_key = list("No Impact", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
-      definePlotMargin(top = 0, left = 10, bottom = 100, right = 100)%>%
+      definePlotMargin(top = 0, left = 10, bottom = 100, right = 150)%>%
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
