@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyWidgets)
 library(dplyr)
+library(htmlwidgets)
 library(pisaR)
 
 ## load data into the app

@@ -1,0 +1,12 @@
+name: pisa_app
+title: pisa_app
+username:
+account: who-influenza
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 388687
+bundleId: 1515835
+url: https://who-influenza.shinyapps.io/pisa_app/
+when: 1533263787.80216
+asMultiple: FALSE
+asStatic: FALSE
