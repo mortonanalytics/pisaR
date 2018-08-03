@@ -681,7 +681,7 @@ pisaChart.prototype.addLegend = function() {
 	//create legend	box (exists in the background)
 	var legendBox = this.svg.append('rect')
 		.attr('class', 'legend-box')
-		.attr("x", this.width - (m.right + m.left))
+		.attr("x", this.width - (m.right))
 		.attr('width', '100px')
 		.attr('height', (legendItems.length * 20) + 'px')
 		.style('fill', 'none')
@@ -700,13 +700,13 @@ pisaChart.prototype.addLegend = function() {
 		.attr("text-anchor", "start");
 	
 	legendElement.append("rect")
-			.attr("x", that.width - (m.right + 30))
+			.attr("x", that.width - (m.right))
 			.attr("width", 12)
 			.attr("height", 12)
 			.attr("fill", function(d) { return d.color = that.colorScale(d); });	
 	
 	legendElement.append("text")
-		.attr("x", that.width - (m.right + 15))
+		.attr("x", that.width - (m.right - 15))
 		.attr("y", 9.5)
 		.attr("dy", "0.15em")
 		.text(function(d) { return d; });
