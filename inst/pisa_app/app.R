@@ -97,7 +97,7 @@ server <- function(input, output,session) {
                 "Select a Region",
                 choices = who_region_ui,
                 selected = who_region_ui,
-                inline = TRUE)
+                inline = FALSE)
   })
 
   output$season_start <- renderUI({
