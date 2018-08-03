@@ -78,4 +78,4 @@ levels_ui <- c("Below seasonal threshold", "Low", "Moderate", "High", "Extra-ord
 confidence_ui <- c("Low", "Medium", "High", "Not Available") # insconsistent spellings in data
 
 who_region_ui <- unique(df$WHOREGION[nchar(df$WHOREGION) == 3])
-
+who_region_ui <- sort(who_region_ui)
