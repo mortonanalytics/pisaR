@@ -39,6 +39,7 @@ ui <- navbarPage(
       id = "explore",
       # Transmissibility Tab
       tabPanel(title = "Transmissibility",
+               h4("Click Country to Zoom In/Out"),
                fluidRow(pisaROutput("map_transmission", width = "100%", height = "450px")),
                fluidRow(pisaROutput("heatmap_transmission",
                                     width = "100%",
@@ -46,6 +47,7 @@ ui <- navbarPage(
         ),
       # Seriousness Tab
       tabPanel(title = "Seriousness",
+               h4("Click Country to Zoom In/Out"),
                fluidRow(pisaROutput("map_seriousness", width = "100%", height = "450px")),
                fluidRow(pisaROutput("heatmap_seriousness",
                                     width = "100%",
@@ -53,6 +55,7 @@ ui <- navbarPage(
                ),
       # Impact Tab
       tabPanel(title = "Impact",
+               h4("Click Country to Zoom In/Out"),
                fluidRow(pisaROutput("map_impact", width = "100%", height = "450px")),
                fluidRow(pisaROutput("heatmap_impact",
                                     width = "100%",
@@ -71,7 +74,7 @@ ui <- navbarPage(
 server <- function(input, output,session) {
 
     ## load data into the app
-  source("./data_scripts/load_data.R")
+  #source("./data_scripts/load_data.R")
 
   ## render UI elements using data available
   output$year <- renderUI({
