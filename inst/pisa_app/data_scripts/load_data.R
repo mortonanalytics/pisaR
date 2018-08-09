@@ -7,8 +7,9 @@ year_prev <- year_current - 1
 year_prev_2 <- year_current -2
 
 ## load credentials from environment
-username <- "preview"
-password <- "preview"
+cred <- readRDS("./data_scripts/token.RDS")
+username <- cred$username
+password <- cred$password
 
 ## call web service for current year
 call <- paste0("http://apps.who.int/gho/athena/flumart/MEASURE/IMPACT,IMPACT_CL,IMPACT_COM,TRANSMISSION,TRANSMISSION_CL,TRANSMISSION_COM,SERIOUSNESS,SERIOUSNESS_CL,SERIOUSNESS_COM?filter=YEAR:",

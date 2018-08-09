@@ -1,8 +1,11 @@
 ---
 title: "PISA Technical Guide"
-author: "Ryan Morton, Morton Analytics"
-date: "May 9, 2018"
-output: rmarkdown::html_vignette
+date: "Version 1.0"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 vignette: >
   %\VignetteIndexEntry{PISA Technical Guide}
   %\VignetteEngine{knitr::rmarkdown}
@@ -54,6 +57,8 @@ get_data <- GET(call, authenticate(username, password, type = "basic"))
 ```
 
 This call returns a JSON object that can be translated into an R data frame and used to populate the application.The `load_data.R` script also cleans known data issues prior to creating any app element.
+
+PLEASE NOTE: the username and password can only be reset in the R environment by changing the `token.RDS` file.
 
 While originally designed to be completely data driven, the UI relies on a mix of coded UI choices and  data driven UI choices:
 
@@ -184,22 +189,80 @@ After the server renders the application elements, the Shiny UI object defines t
 
 #### The Navigation Bar
 
-#### The Data Tabset
+The navigation bar sits at the top of the app and allows the user to navigate between the Home, About, and Explore Data areas.To assign links, headers, colors, and logos, the following items are added as arguments to the `navbar()` function:
+
+```{r nav_bar, eval=FALSE, echo=TRUE}
+windowTitle = "WHO | PISA",
+  # Application title with links to WHO and PISA
+  title = HTML('<span class="navtitle">
+               <a rel="home" href="http://who.int" title="World Health Organization">
+               <img class = "whoimg" src="who_logo_white40px.png"></a>
+               <a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page">
+               <span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
+
+```
+
+After which each tab gets placed and named. Keep in mind that Home and About load static HTML content.
+
+```{r nav_tabs, eval =F, echo=T}
+tabPanel(title = "Home",
+           #load static HTML content for Home and About
+           HTML(readLines("./www/home_page.html"))),
+  tabPanel(title = "About",
+           HTML(readLines("./www/about_page.html"))),
+  tabPanel(title = "Explore Data"...)
+```
+
+#### The Explore Data Tabset
+
+The main functionality of the app occurs in the Explore Data tab and sub-tabs. This section's layout is a `fluidRow` and two columns: User Inputs and graphical output.
+
+The tabset panel is given an `id` so that it can be used as a input for filtering data based on the active tab.
 
 ### CSS
 
-## JavaScript Library`pisaAPI.js`
+`www/style.css` holds the Cascading Style Sheets (CSS) for the app and primarily styles the navigation bar.
 
-### API Architecture
+## JavaScript Library: `pisaAPI.js`
 
-### API CSS
+To generate graphics in the browser, the application creates instances of `pisaChart` via the `pisaAPI.js`. This is done using an intermediary R library, `htmlwidgets`.
+
+#### API Architecture
+
+The API is a higher level version of the `d3.js` v4 API using a ES5 standard object oriented programming framework (ES6 throws an error in RStudio still). The basic workflow is to intialize the instance, place common SVG elements on the webpage, route plot layers to the correct scale and drawing functions, and update with new data.
+
+The API takes a single JSON argument as input containing the `element`, `plotLayers`, and `options` necessary for creating the chart object.
+
+```{javascript, chart_init, eval = F, echo = T}
+var pisaChart = function(opts) {
+	
+	//pass chart elements
+	this.element = opts.element;
+	this.plotLayers = opts.plotLayers;
+	this.options = opts.options;
+	
+	//create the chart 
+	//widget calls the update function if chart already exists
+	this.draw(this.element);
+}
+```
+
+Each function represents a particular task and the developer has made every effort to make these tasks human readable:
+
+![API Functions](www/api_function_list.PNG)
 
 ## `pisaR` R Library
 
+The `pisaR` library extends the API with R programming. All functions in the library are intended to properly prepare the JSON message to the API.
+
+The library utilizes a YAML file that attaches the API and the API's CSS companion file to the head of the HTML document upon loading.
+
 ### Global Map Example
 
-```{r global_map_1, output.width = 9}
-pisaR(width = "100%", height = "400px")%>%
+The global Map is demonstrated with this example:
+
+```{r global_map_1, eval=FALSE}
+pisaR(width = "100%", height = "400px", elementId = "globalMap")%>%
       createLayer(layerType = "globalMap",
                   layerColor = list("green","yellow", "orange", "red", "darkred"),
                   layerLabel = "map",
@@ -219,26 +282,48 @@ pisaR(width = "100%", height = "400px")%>%
 
 ### Heat Map Example
 
-```{r heat_map_1}
-  pisaR(width = "100%", height = "700px") %>%
-    createLayer(layerType = "heatmap",
-                layerColor = list("green","yellow", "orange", "red", "darkred"),
-                layerLabel = "heat",
-                layerData = df_heat %>%
-                  select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISOYW) %>%
-                  arrange(ISOYW),
-                layerMapping = list(x_var = 'ISOYW',
-                                    y_var = 'COUNTRY_TITLE',
-                                    z_var = "TRANSMISSION")) %>%
-    defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
-                     color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not reported", "Not Available")) %>%
-    definePlotMargin(left = 110)
+The heat map is deomonstrated with this example:
+
+```{r heat_map_1, eval=FALSE}
+  pisaR(width = "100%", height = "400px", elementId = "heatmap") %>%
+      createLayer(layerType = "heatmap",
+                  layerColor = list("green","yellow", "orange", "red", "darkred"),
+                  layerLabel = "heat",
+                  layerData = df_heat %>%
+                    select(TRANSMISSION, TRANSMISSION_CL, TRANSMISSION_COM,COUNTRY_TITLE, ISO_YW, ISOYW) %>%
+                    arrange(desc(COUNTRY_TITLE), ISOYW),
+                  layerMapping = list(x_var = 'ISO_YW',
+                                      y_var = 'COUNTRY_TITLE',
+                                      z_var = "TRANSMISSION",
+                                      cl_var = "TRANSMISSION_CL",
+                                      com_var = "TRANSMISSION_COM")) %>%
+      defineColorScale(color_palette = list("green","yellow", "orange", "red", "purple", "lightgray", "gray"),
+                       color_key = list("Below", "Low", "Moderate", "High", "Extra-ordinary", "Not Available", "Not Applicable")) %>%
+      definePlotMargin(left = 110)
+  
 ```
+
 
 ### R Functions
 
-### Installed Elements
+#### `createLayer()`
 
-### Adding Functions
+The main workhorse of the R pacakge is the`createLayer()` function. It takes several arguments to properly create a plot layer:
 
-### App Resources
+- `layerType` takes a string argument to define the chart as either a "globalMap" or "heatmap"
+
+- `layerColor` takes a list of colors, but can be overruled by the `defineColorScale()` function if needed
+
+- `layerLabel` takes a string argument that is a unique id for the chart object
+
+- `layerData` takes a data frame object
+
+- `layerMapping` defines a list of variables mapped to the data's column names
+
+#### `defineColorScale()`
+
+If you need more particular control over the color-category mapping, this function allows you to define the mapping in two ordered lists: `color_palette` and `color_key`.  The palette is the color and the key is the category found in the data.
+
+#### `definePlotMargin()`
+
+If you need more control over the margins, you can define top, bottom, left, and right margins using the `definePlotMargin()` function.
