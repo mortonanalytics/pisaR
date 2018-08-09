@@ -13,9 +13,13 @@ ui <- navbarPage(
   # Application title with links to WHO and PISA
   title = HTML('<span class="navtitle"><a rel="home" href="http://who.int" title="World Health Organization"><img class = "whoimg" src="who_logo_white40px.png"></a><a rel="home" href="http://www.who.int/influenza/surveillance_monitoring/pisa/en/" title="PISA Home Page"><span class="navtext">Pandemic and Epidemic Influenza Severity Assessment</a></span></span>'),
   tabPanel(title = "Home",
+           #load static HTML content for Home and About
            HTML(readLines("./www/home_page.html"))),
+  tabPanel(title = "About",
+           HTML(readLines("./www/about_page.html"))),
   tabPanel(title = "Explore Data",
   fluidRow(
+    ###FILTERS UI
     column(3,
            sidebarPanel(width = 12,
                         h3("Data Filters"),
@@ -27,14 +31,11 @@ ui <- navbarPage(
                         uiOutput(outputId = "week_filter"),
                         h3("Heat map Only"),
                         uiOutput(outputId = "region_filter")
-                        #uiOutput(outputId = "week_filter")
                         )
                         ),
-    # tags$head(
-    #   tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
-    # ),
+    # add style sheet
     includeCSS("./www/style.css"),
-
+    ### PLOT TABS
     column(9, tabsetPanel(
       id = "explore",
       # Transmissibility Tab
@@ -65,16 +66,11 @@ ui <- navbarPage(
     )
   )
   ),
-  tabPanel(title = "About",
-           HTML(readLines("./www/about_page.html"))),
   id = "title_bar"
 )
 
 # Define server logic
 server <- function(input, output,session) {
-
-    ## load data into the app
-  #source("./data_scripts/load_data.R")
 
   ## render UI elements using data available
   output$year <- renderUI({
@@ -125,6 +121,7 @@ server <- function(input, output,session) {
                  grid = FALSE)
   })
 
+  ##### FILTER SERVER SIDE OPERATIONS#####
   filter_data <- reactive({
     req(input$season_start)
     ##season filter breakdown
@@ -162,6 +159,7 @@ server <- function(input, output,session) {
   })
 
   ############# transmission ###################
+  ### MAP ###
   output$map_transmission <- renderPisaR({
     req(input$week_filter)
       pisaR()%>%
@@ -183,9 +181,9 @@ server <- function(input, output,session) {
       assignMapColor(country = list("GL", "EH"), color = "darkgrey")
 
   })
-
+  ### HEATMAP ###
   output$heatmap_transmission <- renderPisaR({
-
+    ##country filter from the map click event
     if(!is.null(input$country_input)){
       if(input$country_input %in% filter_data()[["ISO2"]]){
         df_that <- filter_data() %>%
@@ -221,6 +219,7 @@ server <- function(input, output,session) {
 
   })
   ############# seriousness ###################
+  ### MAP ###
   output$map_seriousness <- renderPisaR({
     req(input$week_filter)
     pisaR()%>%
@@ -243,7 +242,9 @@ server <- function(input, output,session) {
 
   })
 
+  ### HEATMAP ###
   output$heatmap_seriousness <- renderPisaR({
+    ##country filter from the map click event
     if(!is.null(input$country_input)){
       if(input$country_input %in% filter_data()[["ISO2"]]){
         df_that <- filter_data() %>%
@@ -280,6 +281,7 @@ server <- function(input, output,session) {
   })
 
   ############# impact ###################
+  ### MAP ###
   output$map_impact <- renderPisaR({
     req(input$week_filter)
     pisaR()%>%
@@ -302,7 +304,9 @@ server <- function(input, output,session) {
 
   })
 
+  ### HEATMAP ###
   output$heatmap_impact <- renderPisaR({
+    ##country filter from the map click event
     if(!is.null(input$country_input)){
       if(input$country_input %in% filter_data()[["ISO2"]]){
         df_that <- filter_data() %>%
